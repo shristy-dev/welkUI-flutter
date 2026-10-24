@@ -1,11 +1,11 @@
 {
-    "name": "welkui_flutter_example",
-    "short_name": "welkui_flutter_example",
+    "name": "WelkUI Flutter preview",
+    "short_name": "WelkUI Flutter preview",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFDF5",
+    "theme_color": "#FFFDF5",
+    "description": "Live WelkUI Flutter widget previews.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

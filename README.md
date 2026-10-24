@@ -18,6 +18,8 @@
 <p align="center">
   <a href="https://ui.welkdock.com/flutter"><strong>Full documentation</strong></a>
   &nbsp;·&nbsp;
+  <a href="https://pub.dev/packages/welkui_flutter"><img src="https://img.shields.io/pub/v/welkui_flutter.svg" alt="pub.dev package"></a>
+  &nbsp;·&nbsp;
   <a href="#quick-start">Quick start</a>
   &nbsp;·&nbsp;
   <a href="#widget-gallery">Widget gallery</a>
@@ -46,7 +48,7 @@ or runtime font downloads.
 > **Full documentation:** [ui.welkdock.com/flutter](https://ui.welkdock.com/flutter)
 >
 > This README covers setup and the essentials. Visit the Flutter documentation
-> for the full guide.
+> for the full guide and a live preview of each widget.
 
 ## Widget gallery
 
@@ -84,23 +86,17 @@ Flutter **3.35.0+** constraint. The package targets **Android and iOS**.
 
 ### Add the dependency
 
-To use this repository directly:
+Install from [pub.dev](https://pub.dev/packages/welkui_flutter):
 
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  welkui_flutter:
-    git:
-      url: https://github.com/welkdock/welkUI-flutter.git
+```sh
+flutter pub add welkui_flutter
 ```
 
-For a local checkout, use a path dependency instead:
+Or add the equivalent dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  welkui_flutter:
-    path: ../welkUI-flutter
+  welkui_flutter: ^0.0.3
 ```
 
 Run `flutter pub get`, then import the public library:
@@ -332,6 +328,14 @@ The initial menu links to a dedicated screen for each widget:
 Use the back button to return to the parent menu.
 
 ## Local development
+
+To consume a local checkout from another app, use a path dependency:
+
+```yaml
+dependencies:
+  welkui_flutter:
+    path: ../welkUI-flutter
+```
 
 From the repository root:
 

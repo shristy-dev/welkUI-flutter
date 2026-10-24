@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../preview_mode.dart';
+
 class DemoPage extends StatelessWidget {
   const DemoPage({super.key, required this.title, required this.children});
 
@@ -8,7 +10,7 @@ class DemoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
+    appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
     body: SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),

@@ -4,6 +4,49 @@ import 'package:welkui_flutter/welkui_flutter.dart';
 import 'package:welkui_flutter_example/main.dart';
 
 void main() {
+  for (final embedMode in [false, true]) {
+    for (final route in ['/button', '/switch', '/card', '/menu']) {
+      testWidgets('deep link $route with embedMode=$embedMode', (tester) async {
+        tester.view.physicalSize = const Size(360, 740);
+        tester.view.devicePixelRatio = 1;
+        tester.binding.platformDispatcher.defaultRouteNameTestValue = route;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(
+          tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+        );
+        await tester.pumpWidget(WelkExampleApp(embedMode: embedMode));
+        await tester.pumpAndSettle();
+        expect(find.byType(AppBar), embedMode ? findsNothing : findsOneWidget);
+        expect(
+          find.byType(BackButton),
+          embedMode ? findsNothing : findsOneWidget,
+        );
+        expect(
+          find.text(
+            {
+              '/button': 'Button activations: 0',
+              '/switch': 'Notifications: on',
+              '/card': 'Card activations: 0',
+              '/menu': 'Selected route: /home',
+            }[route]!,
+          ),
+          findsOneWidget,
+        );
+        expect(find.byType(ListView), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  testWidgets('embed home has no navigation away from the preview', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const WelkExampleApp(embedMode: true));
+    expect(find.byType(AppBar), findsNothing);
+    expect(find.byType(WelkMenu), findsNothing);
+  });
+
   testWidgets('initial menu navigates to every widget screen and back', (
     tester,
   ) async {
