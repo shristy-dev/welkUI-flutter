@@ -4,6 +4,51 @@ import 'package:welkui_flutter/welkui_flutter.dart';
 import 'package:welkui_flutter_example/main.dart';
 
 void main() {
+  for (final route in ['/button', '/switch', '/card', '/menu']) {
+    testWidgets('compact $route scrolls at 320px with large text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 740);
+      tester.view.devicePixelRatio = 1;
+      tester.binding.platformDispatcher.defaultRouteNameTestValue = route;
+      tester.binding.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(
+        tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+      );
+      addTearDown(
+        tester.binding.platformDispatcher.clearTextScaleFactorTestValue,
+      );
+      await tester.pumpWidget(const WelkExampleApp(embedMode: true));
+      await tester.pumpAndSettle();
+      if (route == '/button') {
+        final primary = find
+            .byWidgetPredicate(
+              (widget) =>
+                  widget is WelkButton &&
+                  widget.variant == WelkButtonVariant.primary &&
+                  widget.onPressed != null,
+            )
+            .first;
+        expect(tester.widget<WelkButton>(primary).size, WelkButtonSize.small);
+        expect(tester.getSize(primary).height, greaterThanOrEqualTo(48));
+        await tester.tap(primary);
+        await tester.pumpAndSettle();
+        expect(find.text('Button activations: 1'), findsOneWidget);
+      }
+      final scrollable = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
+      while (scrollable.position.pixels < scrollable.position.maxScrollExtent) {
+        await tester.drag(find.byType(ListView), const Offset(0, -400));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      }
+      expect(scrollable.position.pixels, greaterThan(0));
+    });
+  }
+
   for (final embedMode in [false, true]) {
     for (final route in ['/button', '/switch', '/card', '/menu']) {
       testWidgets('deep link $route with embedMode=$embedMode', (tester) async {
@@ -87,7 +132,16 @@ void main() {
           findsWidgets,
         );
       }
-      await tester.tap(find.text('Primary'));
+      await tester.tap(
+        find
+            .byWidgetPredicate(
+              (widget) =>
+                  widget is WelkButton &&
+                  widget.variant == WelkButtonVariant.primary &&
+                  widget.onPressed != null,
+            )
+            .first,
+      );
       await tester.pumpAndSettle();
       expect(find.text('Button activations: 1'), findsOneWidget);
     },

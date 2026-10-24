@@ -22,12 +22,15 @@ class _ButtonScreenState extends State<ButtonScreen> {
       Text('Button activations: $_activations'),
       const DemoHeading('All variants'),
       Wrap(
-        spacing: 14,
-        runSpacing: 16,
+        spacing: 10,
+        runSpacing: 10,
         children: [
           for (final variant in WelkButtonVariant.values)
             WelkButton(
               variant: variant,
+              size: DemoPage.isCompact(context)
+                  ? WelkButtonSize.small
+                  : WelkButtonSize.medium,
               onPressed: _activate,
               child: Text(_label(variant.name)),
             ),
@@ -35,8 +38,8 @@ class _ButtonScreenState extends State<ButtonScreen> {
       ),
       const DemoHeading('All sizes'),
       Wrap(
-        spacing: 14,
-        runSpacing: 16,
+        spacing: 10,
+        runSpacing: 10,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           for (final size in WelkButtonSize.values)
@@ -49,13 +52,16 @@ class _ButtonScreenState extends State<ButtonScreen> {
       ),
       const DemoHeading('Disabled variants'),
       Wrap(
-        spacing: 14,
-        runSpacing: 16,
+        spacing: 10,
+        runSpacing: 10,
         children: [
           for (final variant in WelkButtonVariant.values)
             WelkButton(
               variant: variant,
-              child: Text('Disabled ${variant.name}'),
+              size: DemoPage.isCompact(context)
+                  ? WelkButtonSize.small
+                  : WelkButtonSize.medium,
+              child: Text(_label(variant.name)),
             ),
         ],
       ),
@@ -63,6 +69,9 @@ class _ButtonScreenState extends State<ButtonScreen> {
       Align(
         alignment: AlignmentDirectional.centerStart,
         child: WelkButton(
+          size: DemoPage.isCompact(context)
+              ? WelkButtonSize.small
+              : WelkButtonSize.medium,
           onPressed: _activate,
           child: const Row(
             mainAxisSize: MainAxisSize.min,

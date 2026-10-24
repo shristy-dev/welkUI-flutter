@@ -8,12 +8,20 @@ class DemoPage extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
+  static bool isCompact(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < 480;
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
     body: SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        padding: EdgeInsets.fromLTRB(
+          isCompact(context) ? 16 : 20,
+          12,
+          isCompact(context) ? 16 : 20,
+          32,
+        ),
         children: children,
       ),
     ),
@@ -27,10 +35,16 @@ class DemoHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 24, bottom: 16),
+    padding: EdgeInsets.only(
+      top: DemoPage.isCompact(context) ? 18 : 24,
+      bottom: DemoPage.isCompact(context) ? 12 : 16,
+    ),
     child: Text(
       title,
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+      style: TextStyle(
+        fontSize: DemoPage.isCompact(context) ? 16 : 20,
+        fontWeight: FontWeight.w700,
+      ),
     ),
   );
 }

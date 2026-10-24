@@ -1,3 +1,9 @@
+## 0.0.9
+
+* Make narrow example screens more compact with small button showcases,
+  tighter spacing, smaller section headings, and concise card copy.
+* Preserve size demonstrations, long-content examples, touch targets, and text scaling.
+
 ## 0.0.8
 * Update the README banner to a new image with the WelkUI Flutter logo and a mobile device mockup.
 

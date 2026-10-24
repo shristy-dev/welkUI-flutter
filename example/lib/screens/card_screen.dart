@@ -30,13 +30,13 @@ class _CardScreenState extends State<CardScreen> {
       const DemoHeading('Action without icon'),
       WelkCard(
         title: 'Quick action',
-        subtitle: 'The same trailing space is preserved without an icon.',
+        subtitle: 'Tap to get started.',
         onPressed: _activate,
       ),
       const DemoHeading('Feedback disabled'),
       WelkCard(
         title: 'No tap animation',
-        subtitle: 'Still actionable, with visual feedback switched off.',
+        subtitle: 'An action without tap motion.',
         enableFeedback: false,
         onPressed: _activate,
       ),
