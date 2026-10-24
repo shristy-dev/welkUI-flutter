@@ -67,7 +67,6 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     name: Deploy preview
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:
