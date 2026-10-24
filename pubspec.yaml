@@ -1,0 +1,27 @@
+name: welkui_flutter
+description: "WelkUI widgets for Flutter mobile apps."
+version: 0.0.1
+repository: https://github.com/welkdock/welkUI-flutter
+
+platforms:
+  android: ">=21"
+  ios: ">=9.0"
+
+environment:
+  sdk: ^3.13.4
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  fonts:
+    - family: ShortStack
+      fonts:
+        - asset: assets/font/short_stack/ShortStack-Regular.ttf
