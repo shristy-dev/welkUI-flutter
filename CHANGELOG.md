@@ -1,3 +1,9 @@
+## 0.0.5
+
+* Align CI golden comparisons with the macOS baseline environment and pinned Flutter SDK.
+* Upload golden comparison images when CI fails.
+* Run checks and preview builds on pull requests; restrict Pages deployment to main.
+
 ## 0.0.4
 * Add an embeddable web build of the example app for live documentation previews.
 

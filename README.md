@@ -96,7 +96,7 @@ Or add the equivalent dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  welkui_flutter: ^0.0.3
+  welkui_flutter: ^0.0.5
 ```
 
 Run `flutter pub get`, then import the public library:
@@ -349,6 +349,16 @@ flutter test
 
 Visual regression tests load the bundled font and compare deterministic
 renders against the images in `test/goldens/`.
+
+Generate and compare golden images on macOS using Flutter 3.47.5, matching CI.
+Linux rendering can differ even when the bundled font is loaded. For intentional
+visual changes, run `flutter test test/welk_widgets_golden_test.dart --update-goldens`,
+review the resulting images, and rerun `flutter test` before committing.
+Failed CI comparisons are available in the `golden-failures` workflow artifact.
+
+Each release change should update the version in `pubspec.yaml`, the installation
+version above, and a matching entry in `CHANGELOG.md` before pushing. CI does not
+automatically commit version bumps or publish packages.
 
 ## License
 

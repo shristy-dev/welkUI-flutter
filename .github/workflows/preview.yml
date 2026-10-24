@@ -3,6 +3,8 @@ name: Flutter previews
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,7 +17,8 @@ concurrency:
 jobs:
   ci:
     name: Format, analyze, and test
-    runs-on: ubuntu-latest
+    # Golden baselines are generated on macOS with Flutter 3.47.5.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -27,6 +30,13 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
+      - name: Upload golden comparison failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: test/failures/
+          if-no-files-found: ignore
       - working-directory: example
         run: |
           flutter pub get
@@ -50,11 +60,13 @@ jobs:
           flutter pub get
           flutter build web --release --base-href /welkUI-flutter/
       - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           path: example/build/web
 
   deploy:
     name: Deploy preview
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:

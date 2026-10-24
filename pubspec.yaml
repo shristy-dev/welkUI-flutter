@@ -1,6 +1,6 @@
 name: welkui_flutter
 description: "WelkUI widgets for Flutter mobile apps."
-version: 0.0.4
+version: 0.0.5
 repository: https://github.com/welkdock/welkUI-flutter
 
 platforms:
