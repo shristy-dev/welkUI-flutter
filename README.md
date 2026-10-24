@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://ui.welkdock.com/flutter">
-    <img src="https://raw.githubusercontent.com/welkdock/welkUI-flutter/main/assets/images/welkui-og.png" width="960" alt="WelkUI banner">
+    <img src="https://raw.githubusercontent.com/welkdock/welkUI-flutter/main/assets/images/welkui-flutter-og.png" width="960" alt="WelkUI Flutter banner">
   </a>
 </p>
 

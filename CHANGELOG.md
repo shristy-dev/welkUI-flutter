@@ -1,3 +1,7 @@
+## 0.0.8
+* Update the README banner to a new image with the WelkUI Flutter logo and a mobile device mockup.
+
+
 ## 0.0.7
 
 * Refresh the README with a single banner, package quick start, widget names,
@@ -7,7 +11,7 @@
 
 ## 0.0.6
 
-* Bound text-edge rasterization noise in the widget gallery golden comparison
+* Bound text-edge rast§erization noise in the widget gallery golden comparison
   across macOS versions; preserve strict dimensions, alpha, and failure artifacts.
 * Add regression coverage for golden comparison limits; leave menu comparisons exact.
 
