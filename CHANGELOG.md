@@ -1,3 +1,7 @@
+## 0.0.4
+* Add an embeddable web build of the example app for live documentation previews.
+
+
 ## 0.0.3
 
 * Document installing from pub.dev.
