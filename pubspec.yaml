@@ -4,8 +4,8 @@ version: 0.0.1
 repository: https://github.com/welkdock/welkUI-flutter
 
 platforms:
-  android: ">=21"
-  ios: ">=9.0"
+  android:
+  ios:
 
 environment:
   sdk: ^3.13.4
