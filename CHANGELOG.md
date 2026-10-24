@@ -1,3 +1,9 @@
+## 0.0.6
+
+* Bound text-edge rasterization noise in the widget gallery golden comparison
+  across macOS versions; preserve strict dimensions, alpha, and failure artifacts.
+* Add regression coverage for golden comparison limits; leave menu comparisons exact.
+
 ## 0.0.5
 
 * Align CI golden comparisons with the macOS baseline environment and pinned Flutter SDK.

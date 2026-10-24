@@ -3,10 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:welkui_flutter/welkui_flutter.dart';
 
+import 'support/rasterization_golden_comparator.dart';
+
 void main() {
   testWidgets('captures the WelkUI widget appearance with the bundled font', (
     tester,
   ) async {
+    final originalComparator = goldenFileComparator;
+    if (originalComparator is LocalFileComparator) {
+      // macOS CI differs on 118 text-edge pixels (maximum channel delta 14).
+      goldenFileComparator = RasterizationGoldenComparator(
+        originalComparator.basedir.resolve('welk_widgets_golden_test.dart'),
+      );
+      addTearDown(() => goldenFileComparator = originalComparator);
+    }
     tester.view.physicalSize = const Size(440, 620);
     tester.view.devicePixelRatio = 1;
     final fontData = await rootBundle.load(

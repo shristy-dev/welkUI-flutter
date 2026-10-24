@@ -96,7 +96,7 @@ Or add the equivalent dependency to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  welkui_flutter: ^0.0.5
+  welkui_flutter: ^0.0.6
 ```
 
 Run `flutter pub get`, then import the public library:
@@ -355,6 +355,10 @@ Linux rendering can differ even when the bundled font is loaded. For intentional
 visual changes, run `flutter test test/welk_widgets_golden_test.dart --update-goldens`,
 review the resulting images, and rerun `flutter test` before committing.
 Failed CI comparisons are available in the `golden-failures` workflow artifact.
+The widget-gallery comparison allows at most 0.05% changed pixels, each with an
+RGB-channel difference no greater than 16/255, to accommodate measured macOS
+text-edge rasterization noise. Dimensions and alpha remain exact; the menu
+comparison remains pixel-exact.
 
 Each release change should update the version in `pubspec.yaml`, the installation
 version above, and a matching entry in `CHANGELOG.md` before pushing. CI does not
