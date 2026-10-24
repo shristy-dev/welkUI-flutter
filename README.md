@@ -1,25 +1,101 @@
-# WelkUI Flutter
+<p align="center">
+  <a href="https://ui.welkdock.com/flutter">
+    <img src="https://raw.githubusercontent.com/welkdock/welkUI-flutter/main/assets/images/welkui-logo.png" width="112" alt="WelkUI logo">
+  </a>
+</p>
 
-WelkUI Flutter provides mobile-first Flutter versions of the WelkUI button,
-switch, card, and menu. The package targets Android and iOS and keeps the React
-library's paper palette, crisp ink outlines, hard shadows, asymmetric shapes,
-and Short Stack typography.
+<h1 align="center">WelkUI Flutter</h1>
 
-## Local development
+<p align="center">
+  <strong>A little character. A crisp outline. A distinctly WelkUI app.</strong><br>
+  Paper surfaces, ink borders, hard shadows, and handwritten typography for Flutter.
+</p>
 
-This repository is a Flutter package. From the repository root:
+<p align="center">
+  <strong>Android &amp; iOS</strong> &nbsp;·&nbsp; MIT licensed &nbsp;·&nbsp; Locally bundled fonts
+</p>
 
-```sh
-flutter pub get
-flutter test
-cd example
-flutter run
+<p align="center">
+  <a href="https://ui.welkdock.com/flutter"><strong>Full documentation</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#quick-start">Quick start</a>
+  &nbsp;·&nbsp;
+  <a href="#widget-gallery">Widget gallery</a>
+  &nbsp;·&nbsp;
+  <a href="#run-the-example">Example app</a>
+</p>
+
+---
+
+## Familiar WelkUI. Native Flutter.
+
+WelkUI Flutter brings the visual identity of the
+[WelkUI React library](https://github.com/welkdock/welkUI) to mobile apps with
+idiomatic Dart APIs and Flutter interactions. No Material elevation, gradients,
+or runtime font downloads.
+
+- **Distinctive by default:** asymmetric corners, crisp ink outlines, solid
+  offset shadows, and the Short Stack typeface.
+- **Made for touch:** at least 48 logical-pixel interactive targets, visible tap
+  feedback, and controlled state where it matters.
+- **Accessibility built in:** semantics, keyboard focus, RTL layout, text
+  scaling, and reduced-motion support.
+- **Easy to make yours:** immutable theme tokens, local styling overrides,
+  and no third-party runtime dependencies.
+
+> **Full documentation:** [ui.welkdock.com/flutter](https://ui.welkdock.com/flutter)
+>
+> This README covers setup and the essentials. Visit the Flutter documentation
+> for the full guide.
+
+## Widget gallery
+
+Actual Flutter renders using the package's bundled font:
+
+<table>
+  <tr>
+    <th>Buttons, switch &amp; card</th>
+    <th>Navigation menus</th>
+  </tr>
+  <tr>
+    <td align="center" valign="top">
+      <img src="https://raw.githubusercontent.com/welkdock/welkUI-flutter/main/test/goldens/welk_widgets.png" width="352" alt="WelkUI Flutter preview: seven disabled button variants, three disabled button sizes, a disabled on-state switch, and an informational card">
+    </td>
+    <td align="center" valign="top">
+      <img src="https://raw.githubusercontent.com/welkdock/welkUI-flutter/main/test/goldens/welk_menu.png" width="288" alt="WelkMenu preview: standard navigation with an active Home destination, an expanded nested Heroes panel, and a collapsed menu toggle">
+    </td>
+  </tr>
+</table>
+
+The first preview includes disabled button and switch styling; enabled controls
+use full-opacity colors. Explore every state in the mobile example.
+
+| Widget | What you get |
+| --- | --- |
+| `WelkButton` | Seven variants, three sizes, hard-shadow tap feedback, custom widget children |
+| `WelkSwitch` | Parent-controlled state, tappable label, animated thumb, disabled states |
+| `WelkCard` | Informational or actionable content, optional icon, configurable tap feedback |
+| `WelkMenu` | Standard and nested navigation, collapsible toggle, active-route highlighting |
+
+## Quick start
+
+Requires **Dart 3.13.4+** and a compatible Flutter SDK satisfying the package's
+Flutter **3.35.0+** constraint. The package targets **Android and iOS**.
+
+### Add the dependency
+
+To use this repository directly:
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  welkui_flutter:
+    git:
+      url: https://github.com/welkdock/welkUI-flutter.git
 ```
 
-The example app uses a local path dependency on this package and is configured
-for Android and iOS only.
-
-To consume a local checkout from another Flutter app, add a path dependency:
+For a local checkout, use a path dependency instead:
 
 ```yaml
 dependencies:
@@ -27,61 +103,80 @@ dependencies:
     path: ../welkUI-flutter
 ```
 
-## Font
-
-Short Stack is bundled in the package under the SIL Open Font License 1.1. The
-package registers the font as `ShortStack`; consuming apps do not need to
-declare or download it. The source provides a regular font file. Components
-request weight 700 for emphasis, using the supplied font rather than a separate
-bold download.
-
-## Theme customization
-
-Wrap the relevant part of the app in `WelkTheme` and pass a modified immutable
-`WelkThemeData`. Defaults match the WelkUI design tokens.
-
-```dart
-WelkTheme(
-  data: const WelkThemeData().copyWith(
-    accent: const Color(0xFFFFD166),
-    ink: const Color(0xFF202020),
-  ),
-  child: const SizedBox.shrink(),
-)
-```
-
-## Widgets
-
-Import the public package library:
+Run `flutter pub get`, then import the public library:
 
 ```dart
 import 'package:flutter/material.dart';
 import 'package:welkui_flutter/welkui_flutter.dart';
 ```
 
-### WelkButton
-
-`WelkButton` defaults to the primary, medium treatment. A null `onPressed`
-disables it. Supply any widget as its child for custom icon/text composition.
+### Your first WelkUI screen
 
 ```dart
-Widget build(BuildContext context) {
-  return WelkButton(
-    variant: WelkButtonVariant.primary,
-    size: WelkButtonSize.medium,
-    onPressed: () {},
-    child: const Text('Save'),
-  );
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: const Color(0xFFFFFDF5),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WelkCard(
+                  title: 'Hello, WelkUI!',
+                  subtitle: 'A little personality for your next mobile app.',
+                  icon: const Icon(Icons.auto_awesome),
+                ),
+                const SizedBox(height: 24),
+                WelkButton(
+                  onPressed: () {},
+                  child: const Text("Let's build"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 ```
 
-Variants are `primary`, `secondary`, `error`, `warning`, `ghost`, `info`, and
-`success`. Sizes are `small`, `medium`, and `large`.
+## Meet the widgets
+
+### WelkButton
+
+A slightly tilted, outlined button with a solid shadow that compresses on tap.
+The default is `primary` and `medium`. A null `onPressed` disables interaction.
+
+```dart
+WelkButton(
+  variant: WelkButtonVariant.primary,
+  size: WelkButtonSize.medium,
+  onPressed: () {},
+  child: const Text('Save changes'),
+)
+```
+
+| Option | Values |
+| --- | --- |
+| `variant` | `primary`, `secondary`, `error`, `warning`, `ghost`, `info`, `success` |
+| `size` | `small`, `medium`, `large` |
+| `child` | Any widget, including an icon/text composition |
+
+Even the transparent `ghost` variant keeps the WelkUI outline and hard shadow.
 
 ### WelkSwitch
 
-The switch is controlled: update `value` in the parent in response to
-`onChanged`. A null callback disables the complete row.
+A compact switch with a visible label and a subtly asymmetric track. The
+parent owns the value; tapping either the track or label toggles once.
 
 ```dart
 class NotificationSetting extends StatefulWidget {
@@ -105,36 +200,35 @@ class _NotificationSettingState extends State<NotificationSetting> {
 }
 ```
 
+Set `onChanged: null` to disable the complete switch/label row.
+
 ### WelkCard
 
-Cards without an `onPressed` callback are informational. To show an explicitly
-disabled action card, provide the callback and set `enabled: false`.
+A paper card with asymmetric corners, space for an optional icon, and content
+that wraps. Add `onPressed` to make it actionable.
 
 ```dart
-Widget build(BuildContext context) {
-  return WelkCard(
-    title: 'Your workspace',
-    subtitle: 'Manage members and settings.',
-    icon: const Icon(Icons.arrow_forward),
-    onPressed: () {},
-    enableFeedback: true,
-  );
-}
+WelkCard(
+  title: 'Your workspace',
+  subtitle: 'Manage members, projects, and settings in one place.',
+  icon: const Icon(Icons.arrow_forward),
+  onPressed: () {},
+  enableFeedback: true,
+)
 ```
 
-For an informational card, omit `onPressed`; for a disabled action, set
-`enabled: false`.
-
-Actionable cards animate down and compress their hard shadow when tapped.
-Set `enableFeedback: false` to disable this visual feedback while keeping the
-card actionable. Feedback respects reduced-motion settings and never scales
-the card.
+| Treatment | Configuration |
+| --- | --- |
+| Informational | Omit `onPressed`; stays fully opaque without button semantics |
+| Actionable | Provide `onPressed`; tap translates the card and compresses its shadow |
+| Disabled action | Provide `onPressed` and set `enabled: false` |
+| No tap animation | Set `enableFeedback: false`; the action still works |
 
 ### WelkMenu
 
-`WelkMenu` renders a navigation list with ink separators, active-route styling,
-and optional nested paper panels. Its width is 288 logical pixels, capped by
-the parent's constraints. Routes must be unique within a menu.
+Navigation with crisp separators, accent-filled active destinations, and nested
+paper panels. The menu supplies selection callbacks rather than assuming a
+particular router.
 
 ```dart
 Widget build(BuildContext context) {
@@ -158,18 +252,109 @@ Widget build(BuildContext context) {
 }
 ```
 
-The default `WelkMenuVariant.standard` shows root destinations only; `nested`
-adds expandable branches, including a destination for each parent. Set
-`collapsible: true` to add the menu toggle (initially expanded). The parent owns
-navigation and `activeRoute`; the menu does not assume a router. A null
-`onSelected` disables destinations. Branches dismiss on outside interaction or
-selection; keyboard users can navigate with Tab, activate with Enter/Space,
-and dismiss with Escape. Motion respects the platform's reduced-motion setting.
+Register the destinations with your app's navigator. The parent owns navigation
+and `activeRoute`, and routes must be unique within each menu.
 
-## Running the example
+| Option | Behavior |
+| --- | --- |
+| `WelkMenuVariant.standard` | Default; displays root destinations only |
+| `WelkMenuVariant.nested` | Expandable branches with links to parent and child destinations |
+| `collapsible: true` | Adds a menu toggle; initially expanded |
+| `activeRoute` | Highlights the matching destination |
+| `onSelected: null` | Disables destination actions |
 
-From the repository root, run `cd example && flutter run` with an Android
-emulator or iOS simulator available. The initial `/` route uses `WelkMenu` to
-navigate to `/button`, `/switch`, `/card`, and `/menu`. Each widget has its own
-screen showing its variants, interaction states, and long content; use the
-back button to return to the initial menu.
+The menu is 288 logical pixels wide, capped by the available space. Branches
+dismiss on outside interaction or selection. Keyboard users can navigate with
+Tab, activate with Enter/Space, and dismiss with Escape.
+
+## Make it yours
+
+Defaults work without a theme wrapper. Override shared styling with
+`WelkTheme` and immutable `WelkThemeData`:
+
+```dart
+WelkTheme(
+  data: const WelkThemeData().copyWith(
+    accent: const Color(0xFFFFD166),
+    ink: const Color(0xFF202020),
+    paper: const Color(0xFFFFFDF5),
+  ),
+  child: WelkButton(
+    onPressed: () {},
+    child: const Text('Your colors. WelkUI character.'),
+  ),
+)
+```
+
+### Typography, without the network
+
+**Short Stack is bundled locally** and registered by the package. Consuming
+apps do not need to declare font assets or download fonts at runtime.
+
+The supplied font is regular; button labels and card titles request weight
+700 using that file, not a separate bold download. Flutter text scaling is
+preserved.
+
+To use the same typography outside the widgets:
+
+```dart
+const Text(
+  'Made with WelkUI',
+  style: TextStyle(
+    fontFamily: 'ShortStack',
+    package: 'welkui_flutter',
+    fontSize: 20,
+  ),
+)
+```
+
+## Run the example
+
+The example uses the actual package widgets through a local path dependency.
+Start an Android emulator or iOS simulator, or connect a mobile device:
+
+```sh
+flutter pub get
+cd example
+flutter run
+```
+
+The initial menu links to a dedicated screen for each widget:
+
+| Route | Explore |
+| --- | --- |
+| `/` | Parent menu and widget navigation |
+| `/button` | All seven variants, all three sizes, disabled states, custom children |
+| `/switch` | Controlled on/off values, disabled states, long labels, RTL |
+| `/card` | Icons, long content, informational/actionable states, feedback options |
+| `/menu` | Standard, nested, collapsible, active-route, disabled, and RTL examples |
+
+Use the back button to return to the parent menu.
+
+## Local development
+
+From the repository root:
+
+```sh
+flutter pub get
+dart format --output=none --set-exit-if-changed .
+flutter analyze
+flutter test
+(cd example && flutter test)
+```
+
+Visual regression tests load the bundled font and compare deterministic
+renders against the images in `test/goldens/`.
+
+## License
+
+WelkUI Flutter is released under the [MIT License](LICENSE).
+Short Stack is distributed under the
+[SIL Open Font License 1.1](assets/font/short_stack/OFL.txt).
+
+---
+
+<p align="center">
+  Built by <a href="https://github.com/welkdock">Welkdock</a>.<br>
+  <a href="https://ui.welkdock.com/flutter"><strong>Explore the full Flutter documentation &rarr;</strong></a>
+</p>
