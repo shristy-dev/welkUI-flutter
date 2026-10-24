@@ -1,3 +1,10 @@
+## 0.0.7
+
+* Refresh the README with a single banner, package quick start, widget names,
+  and links to full documentation and live previews.
+* Add contribution guidelines covering setup, design conventions, tests, and releases.
+* Clarify package and bundled-font licensing.
+
 ## 0.0.6
 
 * Bound text-edge rasterization noise in the widget gallery golden comparison
