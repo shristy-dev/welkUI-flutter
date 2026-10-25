@@ -1,6 +1,6 @@
 name: welkui_flutter
-description: "WelkUI widgets for Flutter mobile apps."
-version: 0.0.9
+description: "Comic-inspired Flutter widgets for Android and iOS, with crisp outlines, hard shadows, bundled typography, and accessible mobile interactions."
+version: 0.1.2
 repository: https://github.com/welkdock/welkUI-flutter
 
 platforms:
@@ -14,6 +14,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  qr: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -21,6 +22,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  assets:
+    - assets/fallbacks/
+    - assets/portraits/
+    - assets/stickers/
   fonts:
     - family: ShortStack
       fonts:

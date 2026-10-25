@@ -30,7 +30,7 @@ or runtime font downloads.
 - **Accessibility built in:** semantics, keyboard focus, RTL layout, text
   scaling, and reduced-motion support.
 - **Easy to make yours:** immutable theme tokens, local styling overrides,
-  and no third-party runtime dependencies.
+  and locally bundled typography. QR encoding uses the pure-Dart `qr` package.
 
 > **Full documentation:** [ui.welkdock.com/flutter](https://ui.welkdock.com/flutter)
 >
@@ -49,7 +49,7 @@ Or add the dependency to `pubspec.yaml` and run `flutter pub get`:
 
 ```yaml
 dependencies:
-  welkui_flutter: ^0.0.7
+  welkui_flutter: ^0.1.2
 ```
 
 Requires Dart **3.13.4+** and a compatible Flutter SDK satisfying **3.35.0+**.
@@ -57,10 +57,18 @@ Short Stack is bundled locally; no additional font setup is needed.
 
 ## Widgets
 
-- `WelkButton`
-- `WelkSwitch`
-- `WelkCard`
-- `WelkMenu`
+| Controls & forms | Content & navigation | Overlays & utilities |
+| --- | --- | --- |
+| `WelkButton` | `WelkAccordion` | `WelkDialog` |
+| `WelkIconButton` | `WelkAvatar` | `WelkDrawer` |
+| `WelkCheckBox` | `WelkBadge` | `WelkTooltip` |
+| `WelkRadio` | `WelkBreadCrumbs` | `WelkSnackBar` |
+| `WelkRadioGroup` | `WelkCard` | `WelkAttachment` |
+| `WelkSwitch` | `WelkDivider` | `WelkQRCode` |
+| `WelkInput` | `WelkImage` | `WelkDateInput` |
+| `WelkOTPInput` | `WelkMenu` | `WelkDatePicker` |
+| `WelkDropDown` | `WelkSticker` | `WelkTimePicker` |
+| `WelkRangeSlider` | `WelkStickerCard` | `WelkTabs` |
 
 ## Contributing & license
 

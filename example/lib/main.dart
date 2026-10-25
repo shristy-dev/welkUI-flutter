@@ -3,11 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:welkui_flutter/welkui_flutter.dart';
 
 import 'preview_mode.dart';
-import 'screens/button_screen.dart';
-import 'screens/card_screen.dart';
 import 'screens/gallery_screen.dart';
-import 'screens/menu_screen.dart';
-import 'screens/switch_screen.dart';
+import 'widget_catalog.dart';
 
 void main() {
   final bool embedMode = Uri.base.queryParameters['embed'] == '1';
@@ -55,10 +52,7 @@ class WelkExampleApp extends StatelessWidget {
           ),
           routes: {
             '/': (_) => const GalleryScreen(),
-            '/button': (_) => const ButtonScreen(),
-            '/switch': (_) => const SwitchScreen(),
-            '/card': (_) => const CardScreen(),
-            '/menu': (_) => const MenuScreen(),
+            for (final item in widgetCatalog) item.route: (_) => item.screen,
           },
         ),
       ),

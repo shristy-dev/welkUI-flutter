@@ -4,7 +4,20 @@ import 'dart:ui' as ui;
 import 'package:flutter_test/flutter_test.dart';
 
 /// Allows only sparse, low-amplitude rasterization differences.
-bool matchesRasterizationNoise(Uint8List actual, Uint8List expected) {
+bool matchesRasterizationNoise(
+  Uint8List actual,
+  Uint8List expected, {
+  double maxChangedPixelFraction = 0.0005,
+}) {
+  if (!maxChangedPixelFraction.isFinite ||
+      maxChangedPixelFraction < 0 ||
+      maxChangedPixelFraction > 1) {
+    throw ArgumentError.value(
+      maxChangedPixelFraction,
+      'maxChangedPixelFraction',
+      'Must be finite and between 0 and 1.',
+    );
+  }
   if (actual.length != expected.length || actual.length % 4 != 0) return false;
   final pixelCount = actual.length ~/ 4;
   var changedPixels = 0;
@@ -16,13 +29,18 @@ bool matchesRasterizationNoise(Uint8List actual, Uint8List expected) {
       changed |= delta != 0;
     }
     if (changed) changedPixels++;
-    if (changedPixels > pixelCount * 0.0005) return false;
+    if (changedPixels > pixelCount * maxChangedPixelFraction) return false;
   }
   return true;
 }
 
 class RasterizationGoldenComparator extends LocalFileComparator {
-  RasterizationGoldenComparator(super.testFile);
+  RasterizationGoldenComparator(
+    super.testFile, {
+    this.maxChangedPixelFraction = 0.0005,
+  });
+
+  final double maxChangedPixelFraction;
 
   @override
   Future<bool> compare(Uint8List imageBytes, Uri golden) async {
@@ -48,6 +66,7 @@ class RasterizationGoldenComparator extends LocalFileComparator {
                   matchesRasterizationNoise(
                     actualData.buffer.asUint8List(),
                     expectedData.buffer.asUint8List(),
+                    maxChangedPixelFraction: maxChangedPixelFraction,
                   )) {
                 return true;
               }
