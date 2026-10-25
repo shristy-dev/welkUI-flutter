@@ -1,3 +1,20 @@
+## 0.1.5
+
+* Use a compact 36px calendar container inside the date input field while
+  preserving its 48px touch target and spacing from the field outline.
+
+## 0.1.4
+
+* Fit complete Monday-to-Sunday months into date picker and date input calendars
+  without horizontal scrolling, including narrow screens and RTL layouts.
+* Adapt day-cell widths to available space, retain tall touch targets, and align
+  keyboard Home/End navigation with Monday-first weeks.
+
+## 0.1.3
+
+* Use white backgrounds throughout the example app and web preview shell,
+  including app bars, while preserving the widgets' original design colors.
+
 ## 0.1.2
 
 * Allow measured CI text-edge rasterization noise in example catalog goldens

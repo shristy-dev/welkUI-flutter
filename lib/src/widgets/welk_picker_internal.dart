@@ -93,6 +93,8 @@ class PickerButton extends StatefulWidget {
     this.selectedShadow = true,
     this.rotation = 0,
     this.disabledOpacity = 0.45,
+    this.minimumSize = const Size(48, 48),
+    this.visualSize,
   });
 
   final Widget child;
@@ -108,6 +110,8 @@ class PickerButton extends StatefulWidget {
   final bool selectedShadow;
   final double rotation;
   final double disabledOpacity;
+  final Size minimumSize;
+  final Size? visualSize;
 
   @override
   State<PickerButton> createState() => _PickerButtonState();
@@ -116,6 +120,16 @@ class PickerButton extends StatefulWidget {
 class _PickerButtonState extends State<PickerButton> {
   bool _focused = false;
   bool _hovered = false;
+
+  Widget _sizeSurface(Widget surface) => widget.visualSize == null
+      ? surface
+      : SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: SizedBox.fromSize(size: widget.visualSize, child: surface),
+          ),
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -162,34 +176,37 @@ class _PickerButtonState extends State<PickerButton> {
             child: GestureDetector(
               onTap: widget.onPressed,
               behavior: HitTestBehavior.opaque,
-              child: Opacity(
-                opacity: enabled ? 1 : widget.disabledOpacity,
-                child: Transform.rotate(
-                  angle: widget.rotation,
-                  child: WelkFocusRing(
-                    visible: _focused && enabled,
-                    color: theme.focus,
-                    shape: shape,
-                    gap: 2,
-                    child: PickerSurface(
-                      color: _hovered && enabled
-                          ? theme.accentHover
-                          : widget.selected == true
-                          ? theme.accent
-                          : widget.color,
-                      radii: radii,
-                      outlined:
-                          widget.outlined ||
-                          widget.current ||
-                          widget.selected == true,
-                      shadow: widget.selected == true && widget.selectedShadow,
-                      shadowOffset: const Offset(2, 2),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          minWidth: 48,
-                          minHeight: 48,
+              child: _sizeSurface(
+                Opacity(
+                  opacity: enabled ? 1 : widget.disabledOpacity,
+                  child: Transform.rotate(
+                    angle: widget.rotation,
+                    child: WelkFocusRing(
+                      visible: _focused && enabled,
+                      color: theme.focus,
+                      shape: shape,
+                      gap: 2,
+                      child: PickerSurface(
+                        color: _hovered && enabled
+                            ? theme.accentHover
+                            : widget.selected == true
+                            ? theme.accent
+                            : widget.color,
+                        radii: radii,
+                        outlined:
+                            widget.outlined ||
+                            widget.current ||
+                            widget.selected == true,
+                        shadow:
+                            widget.selected == true && widget.selectedShadow,
+                        shadowOffset: const Offset(2, 2),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: widget.minimumSize.width,
+                            minHeight: widget.minimumSize.height,
+                          ),
+                          child: Center(child: widget.child),
                         ),
-                        child: Center(child: widget.child),
                       ),
                     ),
                   ),
@@ -250,66 +267,77 @@ class _PickerEditorState extends State<PickerEditor> {
           style: pickerTextStyle(context).copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        Focus(
-          skipTraversal: true,
-          includeSemantics: false,
-          onFocusChange: (value) => setState(() => _focused = value),
-          child: WelkFocusRing(
-            // Keep the editor subtree stable when focus changes.
-            visible: true,
-            color: _focused ? theme.focus : Colors.transparent,
-            shape: WelkShapeBorder(radii: radii),
-            gap: 2,
-            child: Opacity(
-              opacity: widget.enabled ? 1 : (widget.timeStyle ? 0.55 : 0.45),
-              child: PickerSurface(
-                radii: radii,
-                shadow: false,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Semantics(
-                          label: widget.label,
-                          child: TextField(
-                            controller: widget.controller,
-                            focusNode: widget.focusNode,
-                            autofocus: widget.autofocus,
-                            enabled: widget.enabled,
-                            style: pickerTextStyle(context),
-                            textDirection: TextDirection.ltr,
-                            keyboardType: TextInputType.datetime,
-                            textInputAction: TextInputAction.done,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            cursorColor: theme.ink,
-                            onChanged: widget.onChanged,
-                            decoration: InputDecoration(
-                              isCollapsed: true,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              hintText: widget.hint,
-                              hintStyle: pickerTextStyle(context).copyWith(
-                                color: theme.ink.withValues(alpha: 0.6),
+        Row(
+          children: [
+            Expanded(
+              child: Focus(
+                skipTraversal: true,
+                includeSemantics: false,
+                onFocusChange: (value) => setState(() => _focused = value),
+                child: WelkFocusRing(
+                  // Keep the editor subtree stable when focus changes.
+                  visible: true,
+                  color: _focused ? theme.focus : Colors.transparent,
+                  shape: WelkShapeBorder(radii: radii),
+                  gap: 2,
+                  child: Opacity(
+                    opacity: widget.enabled
+                        ? 1
+                        : (widget.timeStyle ? 0.55 : 0.45),
+                    child: PickerSurface(
+                      radii: radii,
+                      shadow: false,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: Semantics(
+                                label: widget.label,
+                                child: TextField(
+                                  controller: widget.controller,
+                                  focusNode: widget.focusNode,
+                                  autofocus: widget.autofocus,
+                                  enabled: widget.enabled,
+                                  style: pickerTextStyle(context),
+                                  textDirection: TextDirection.ltr,
+                                  keyboardType: TextInputType.datetime,
+                                  textInputAction: TextInputAction.done,
+                                  autocorrect: false,
+                                  enableSuggestions: false,
+                                  cursorColor: theme.ink,
+                                  onChanged: widget.onChanged,
+                                  decoration: InputDecoration(
+                                    isCollapsed: true,
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    disabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    hintText: widget.hint,
+                                    hintStyle: pickerTextStyle(context)
+                                        .copyWith(
+                                          color: theme.ink.withValues(
+                                            alpha: 0.6,
+                                          ),
+                                        ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          if (widget.suffix != null)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 4),
+                              child: widget.suffix!,
+                            ),
+                        ],
                       ),
                     ),
-                    if (widget.suffix != null)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 4),
-                        child: widget.suffix!,
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
         SizedBox(height: widget.timeStyle ? 8 : 6.4),
         Text(

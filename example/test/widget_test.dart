@@ -4,6 +4,23 @@ import 'package:welkui_flutter/welkui_flutter.dart';
 import 'package:welkui_flutter_example/main.dart';
 
 void main() {
+  for (final embedMode in [false, true]) {
+    testWidgets('app background stays white with embedMode=$embedMode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(WelkExampleApp(embedMode: embedMode));
+      await tester.pumpAndSettle();
+      final context = tester.element(find.byType(Scaffold));
+      final theme = Theme.of(context);
+      expect(theme.scaffoldBackgroundColor, Colors.white);
+      expect(theme.canvasColor, Colors.white);
+      expect(theme.colorScheme.surface, Colors.white);
+      expect(theme.appBarTheme.backgroundColor, Colors.white);
+      expect(theme.appBarTheme.surfaceTintColor, Colors.transparent);
+      expect(WelkTheme.of(context).paper, const Color(0xFFFFFDF5));
+    });
+  }
+
   for (final route in ['/button', '/switch', '/card', '/menu']) {
     testWidgets('compact $route scrolls at 320px with large text', (
       tester,

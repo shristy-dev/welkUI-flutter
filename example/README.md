@@ -48,6 +48,11 @@ The initial route (`/`) uses `WelkMenu` to navigate to dedicated widget screens:
 
 Use the back button to return to the parent menu.
 
+Both date calendars show complete Monday-to-Sunday weeks without horizontal
+scrolling. On narrow layouts, day targets become narrower than 48 pixels while
+remaining at least 48 pixels tall; labels scale down only when necessary to fit
+their column. Popup calendars scroll vertically if the viewport is too short.
+
 `WelkImage.network(url, fallbackAsset: 'assets/placeholder.jpg')` uses the
 consumer's asset on failure. Omit `fallbackAsset` to select one of five bundled
 comic images once per failed source. `WelkImage.asset('assets/photo.jpg')` loads
