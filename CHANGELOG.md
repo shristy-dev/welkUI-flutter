@@ -1,3 +1,26 @@
+## 0.1.1
+
+* Simplify snackbar placement to centered `top` and `bottom` positions.
+* Update the snackbar example to show only these two positions.
+
+## 0.1.0
+
+* Complete the 30-component catalog from the React library with mobile form
+  controls, date/time pickers, content widgets, navigation, overlays, and feedback.
+* Add locally encoded QR codes with standard and card treatments, square or
+  rounded modules, validation, and a four-module quiet zone.
+* Add a dedicated mobile and embeddable example route for every widget, backed
+  by a shared catalog and narrow-screen regression coverage.
+* Use the pure-Dart `qr` package for standards-compliant QR encoding.
+* Bundle the reference avatar portraits and transparent sticker artwork.
+
+## 0.0.10
+
+* Add `WelkImage.network` and `WelkImage.asset` with asymmetric outlines and hard shadows.
+* Bundle five mobile-compatible comic fallback images; select once per failed
+  network source, or use a custom fallback asset.
+* Add the `/image` example and documentation preview route.
+
 ## 0.0.9
 
 * Make narrow example screens more compact with small button showcases,

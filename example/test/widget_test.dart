@@ -97,7 +97,13 @@ void main() {
   ) async {
     await tester.pumpWidget(const WelkExampleApp());
     expect(find.text('WelkUI Flutter'), findsOneWidget);
-    for (final title in ['WelkButton', 'WelkSwitch', 'WelkCard', 'WelkMenu']) {
+    for (final title in [
+      'WelkButton',
+      'WelkSwitch',
+      'WelkCard',
+      'WelkMenu',
+      'WelkImage',
+    ]) {
       await tester.tap(find.text(title));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(AppBar, title), findsOneWidget);
