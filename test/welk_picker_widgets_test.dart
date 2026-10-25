@@ -39,6 +39,50 @@ Finder action(String label) => find.byWidgetPredicate(
 );
 
 void main() {
+  for (final direction in TextDirection.values) {
+    testWidgets(
+      'calendar action is compact and inside the field in $direction',
+      (tester) async {
+        await tester.pumpWidget(
+          host(
+            WelkDateInput(
+              label: 'Date',
+              value: DateTime(2026, 10, 22),
+              onChanged: (_) {},
+            ),
+            direction: direction,
+          ),
+        );
+        final button = action('Open calendar');
+        expect(tester.getSize(button), const Size(48, 48));
+        final surface = find.descendant(
+          of: button,
+          matching: find.byType(PickerSurface),
+        );
+        expect(tester.getSize(surface), const Size(36, 36));
+        final fieldSurface = find
+            .ancestor(
+              of: find.byType(TextField),
+              matching: find.byType(PickerSurface),
+            )
+            .first;
+        final fieldRect = tester.getRect(fieldSurface);
+        final buttonRect = tester.getRect(button);
+        expect(buttonRect.left, greaterThan(fieldRect.left));
+        expect(buttonRect.right, lessThan(fieldRect.right));
+        expect(buttonRect.top, greaterThanOrEqualTo(fieldRect.top));
+        expect(buttonRect.bottom, lessThanOrEqualTo(fieldRect.bottom));
+        expect(
+          find.descendant(of: fieldSurface, matching: button),
+          findsOneWidget,
+        );
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        expect(find.byType(PickerCalendar), findsOneWidget);
+      },
+    );
+  }
+
   testWidgets('removing date input owner removes its popup and barrier', (
     tester,
   ) async {
@@ -119,7 +163,7 @@ void main() {
   });
 
   testWidgets(
-    'overflow calendar affordance exposes Saturday and respects range',
+    'full month exposes weekend dates without scrolling and respects range',
     (tester) async {
       DateTime? selected = DateTime(2026, 10, 22);
       var calls = 0;
@@ -141,19 +185,7 @@ void main() {
         ),
       );
       await tester.pump();
-      final scrollbar = find.byType(RawScrollbar);
-      expect(scrollbar, findsOneWidget);
-      final affordance = tester.widget<RawScrollbar>(scrollbar);
-      expect(affordance.thumbVisibility, isTrue);
-      expect(affordance.thickness, 2);
-      expect(affordance.thumbColor, const Color(0xFF242424));
-      expect(affordance.controller, isNotNull);
-      final horizontal = find.descendant(
-        of: scrollbar,
-        matching: find.byType(SingleChildScrollView),
-      );
-      await tester.drag(horizontal, const Offset(-120, 0));
-      await tester.pumpAndSettle();
+      expect(find.byType(RawScrollbar), findsNothing);
       final saturday = find.byKey(const ValueKey('date-2026-10-24'));
       expect(saturday.hitTestable(), findsOneWidget);
       await tester.tap(saturday);
@@ -185,18 +217,12 @@ void main() {
         ),
       );
       await tester.pump();
-      final scrollbar = tester.widget<RawScrollbar>(find.byType(RawScrollbar));
-      expect(scrollbar.controller!.offset, greaterThan(0));
+      expect(find.byType(RawScrollbar), findsNothing);
       expect(
         find.byKey(const ValueKey('date-2026-10-24')).hitTestable(),
         findsOneWidget,
       );
-      final viewport = tester.getRect(
-        find.descendant(
-          of: find.byType(RawScrollbar),
-          matching: find.byType(SingleChildScrollView),
-        ),
-      );
+      final viewport = tester.getRect(find.byType(PickerCalendar));
       final selectedRect = tester.getRect(
         find.byKey(const ValueKey('date-2026-10-24')),
       );
@@ -204,6 +230,134 @@ void main() {
       expect(selectedRect.right, lessThanOrEqualTo(viewport.right));
       expect(tester.takeException(), isNull);
     }
+  });
+
+  for (final width in [240.0, 320.0, 360.0, 600.0]) {
+    for (final direction in TextDirection.values) {
+      for (final popup in [false, true]) {
+        testWidgets(
+          'full Monday-Sunday month at $width, $direction, popup=$popup',
+          (tester) async {
+            tester.view.physicalSize = Size(width, 1400);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
+            DateTime? selected;
+            await tester.pumpWidget(
+              host(
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    void select(DateTime? value) =>
+                        setState(() => selected = value);
+                    // March 2026 requires six Monday-first rows.
+                    return popup
+                        ? WelkDateInput(
+                            label: 'Date',
+                            value: selected,
+                            initialDisplayDate: DateTime(2026, 3),
+                            onChanged: select,
+                          )
+                        : WelkDatePicker(
+                            label: 'Date',
+                            value: selected,
+                            initialDisplayDate: DateTime(2026, 3),
+                            onChanged: select,
+                          );
+                  },
+                ),
+                width: width,
+                textScale: 2,
+                direction: direction,
+              ),
+            );
+            if (popup) {
+              await tester.tap(action('Open calendar'));
+            }
+            await tester.pumpAndSettle();
+            final calendar = find.byType(PickerCalendar);
+            final bounds = tester.getRect(calendar);
+            expect(tester.takeException(), isNull);
+            expect(
+              find.descendant(of: calendar, matching: find.byType(Scrollable)),
+              findsNothing,
+            );
+            for (final label in [
+              'Mon',
+              'Tue',
+              'Wed',
+              'Thu',
+              'Fri',
+              'Sat',
+              'Sun',
+            ]) {
+              final rect = tester.getRect(find.text(label));
+              expect(rect.left, greaterThanOrEqualTo(bounds.left - 0.01));
+              expect(rect.right, lessThanOrEqualTo(bounds.right + 0.01));
+            }
+            final monday = tester.getCenter(find.text('Mon')).dx;
+            final sunday = tester.getCenter(find.text('Sun')).dx;
+            expect(
+              monday,
+              direction == TextDirection.ltr
+                  ? lessThan(sunday)
+                  : greaterThan(sunday),
+            );
+            for (var day = 1; day <= 31; day++) {
+              final cell = find.byKey(
+                ValueKey('date-2026-03-${day.toString().padLeft(2, '0')}'),
+              );
+              final rect = tester.getRect(cell);
+              expect(rect.left, greaterThanOrEqualTo(bounds.left - 0.01));
+              expect(rect.right, lessThanOrEqualTo(bounds.right + 0.01));
+              expect(cell.hitTestable(), findsOneWidget);
+            }
+            final firstSunday = tester.getCenter(
+              find.byKey(const ValueKey('date-2026-03-01')),
+            );
+            expect(firstSunday.dx, closeTo(sunday, 0.01));
+            await tester.tap(find.byKey(const ValueKey('date-2026-03-29')));
+            await tester.pumpAndSettle();
+            expect(selected, DateTime(2026, 3, 29));
+            expect(tester.takeException(), isNull);
+          },
+        );
+      }
+    }
+  }
+
+  testWidgets('Home and End follow Monday-first calendar weeks', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        WelkDatePicker(
+          label: 'Date',
+          value: DateTime(2026, 10, 22),
+          onChanged: (_) {},
+        ),
+      ),
+    );
+    final thursday = find.byKey(const ValueKey('date-2026-10-22'));
+    tester.widget<PickerButton>(thursday).focusNode!.requestFocus();
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.home);
+    await tester.pump();
+    expect(
+      tester
+          .widget<PickerButton>(find.byKey(const ValueKey('date-2026-10-19')))
+          .focusNode!
+          .hasFocus,
+      isTrue,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.end);
+    await tester.pump();
+    expect(
+      tester
+          .widget<PickerButton>(find.byKey(const ValueKey('date-2026-10-25')))
+          .focusNode!
+          .hasFocus,
+      isTrue,
+    );
   });
 
   testWidgets('calendar has no scrollbar when all columns fit', (tester) async {

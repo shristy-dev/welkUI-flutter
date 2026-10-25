@@ -7,6 +7,8 @@ import 'welk_picker_internal.dart';
 
 /// An inline, controlled calendar with an editable YYYY-MM-DD field.
 ///
+/// Shows complete Monday-first weeks without horizontal scrolling. Day cells
+/// adapt to available width, retaining at least 48 logical pixels of height.
 /// Dates are local civil dates; time and UTC offsets are ignored. Invalid or
 /// out-of-range edits remain visible but are not sent to [onChanged].
 /// A null [onChanged] disables editing and selection.
@@ -287,12 +289,14 @@ class _PickerDateControlState extends State<PickerDateControl> {
           ? PickerButton(
               label: 'Open calendar',
               disabledOpacity: 1,
+              minimumSize: Size.zero,
+              visualSize: const Size(36, 36),
               onPressed: enabled ? _openCalendar : null,
               color: WelkTheme.of(context).accent,
               rotation: -0.0349066,
               child: Icon(
                 Icons.calendar_today_outlined,
-                size: 20,
+                size: 18,
                 color: WelkTheme.of(context).ink,
               ),
             )
@@ -347,10 +351,6 @@ class PickerCalendar extends StatefulWidget {
 class _PickerCalendarState extends State<PickerCalendar> {
   late DateTime _month;
   final _dayFocus = List.generate(31, (_) => FocusNode());
-  final _horizontalScroll = ScrollController();
-  bool _revealSelected = true;
-  double? _calendarWidth;
-  double? _viewportWidth;
 
   DateTime _bounded(DateTime date) {
     date = pickerDateOnly(date);
@@ -376,7 +376,6 @@ class _PickerCalendarState extends State<PickerCalendar> {
   void initState() {
     super.initState();
     _month = _initialMonth();
-    _revealSelected = true;
   }
 
   @override
@@ -395,42 +394,10 @@ class _PickerCalendarState extends State<PickerCalendar> {
 
   @override
   void dispose() {
-    _horizontalScroll.dispose();
     for (final node in _dayFocus) {
       node.dispose();
     }
     super.dispose();
-  }
-
-  void _revealSelection(double width, double viewport) {
-    if (_calendarWidth != width || _viewportWidth != viewport) {
-      _calendarWidth = width;
-      _viewportWidth = viewport;
-      _revealSelected = true;
-    }
-    if (!_revealSelected) return;
-    _revealSelected = false;
-    final selected = widget.value;
-    if (selected == null ||
-        selected.year != _month.year ||
-        selected.month != _month.month) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_horizontalScroll.hasClients) return;
-      final cellWidth = width / 7;
-      final start = (selected.weekday % 7) * cellWidth;
-      final end = start + cellWidth;
-      final current = _horizontalScroll.offset;
-      final target = start < current
-          ? start
-          : end > current + viewport
-          ? end - viewport
-          : current;
-      _horizontalScroll.jumpTo(
-        target.clamp(0.0, _horizontalScroll.position.maxScrollExtent),
-      );
-    });
   }
 
   bool _available(DateTime date) =>
@@ -450,8 +417,8 @@ class _PickerCalendarState extends State<PickerCalendar> {
       LogicalKeyboardKey.arrowRight => rtl ? -1 : 1,
       LogicalKeyboardKey.arrowUp => -7,
       LogicalKeyboardKey.arrowDown => 7,
-      LogicalKeyboardKey.home => -(date.weekday % 7),
-      LogicalKeyboardKey.end => 6 - date.weekday % 7,
+      LogicalKeyboardKey.home => 1 - date.weekday,
+      LogicalKeyboardKey.end => 7 - date.weekday,
       _ => null,
     };
     if (step == null) return KeyEventResult.ignored;
@@ -487,7 +454,7 @@ class _PickerCalendarState extends State<PickerCalendar> {
         next.year <= 9999 &&
         (widget.maxDate == null ||
             !next.isAfter(pickerDateOnly(widget.maxDate!)));
-    final offset = _month.weekday % 7;
+    final offset = _month.weekday - 1;
     final count = DateTime(_month.year, _month.month + 1, 0).day;
     final rows = ((offset + count) / 7).ceil();
     final today = pickerFormatDate(DateTime.now());
@@ -546,82 +513,65 @@ class _PickerCalendarState extends State<PickerCalendar> {
           ),
         ),
         const SizedBox(height: 12),
-        // Keep full-size hit areas even in a narrow popup or at large text sizes.
         LayoutBuilder(
           builder: (context, constraints) {
-            final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-            final minimum = 7 * (48.0 * scale.clamp(1.0, 2.5) + 3.2);
-            final width = constraints.maxWidth > minimum
-                ? constraints.maxWidth
-                : minimum;
-            final overflowing = width > constraints.maxWidth;
-            _revealSelection(width, constraints.maxWidth);
-            final calendar = SingleChildScrollView(
-              controller: _horizontalScroll,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: width,
-                child: Column(
+            final width = constraints.maxWidth;
+            final dayHeight =
+                MediaQuery.textScalerOf(context).scale(13.6) * 1.5 + 28;
+            return Column(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        for (final day in const [
-                          'Sun',
-                          'Mon',
-                          'Tue',
-                          'Wed',
-                          'Thu',
-                          'Fri',
-                          'Sat',
-                        ])
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: Text(
-                                day,
-                                textAlign: TextAlign.center,
-                                style: pickerTextStyle(context, size: 11.2),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    for (var row = 0; row < rows; row++)
-                      Row(
-                        children: [
-                          for (var col = 0; col < 7; col++)
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(1.6),
-                                child: _day(
-                                  row * 7 + col - offset + 1,
-                                  count,
-                                  today,
-                                  selected,
-                                  localizations,
-                                  width / 7 - 3.2,
+                    for (final day in const [
+                      'Mon',
+                      'Tue',
+                      'Wed',
+                      'Thu',
+                      'Fri',
+                      'Sat',
+                      'Sun',
+                    ])
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Semantics(
+                            label: day,
+                            child: ExcludeSemantics(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  day,
+                                  textAlign: TextAlign.center,
+                                  style: pickerTextStyle(context, size: 11.2),
                                 ),
                               ),
                             ),
-                        ],
+                          ),
+                        ),
                       ),
                   ],
                 ),
-              ),
-            );
-            if (!overflowing) return calendar;
-            return RawScrollbar(
-              controller: _horizontalScroll,
-              thumbVisibility: true,
-              interactive: true,
-              thickness: 2,
-              radius: Radius.zero,
-              thumbColor: theme.ink,
-              scrollbarOrientation: ScrollbarOrientation.bottom,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: calendar,
-              ),
+                for (var row = 0; row < rows; row++)
+                  Row(
+                    children: [
+                      for (var col = 0; col < 7; col++)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(1.6),
+                            child: _day(
+                              row * 7 + col - offset + 1,
+                              count,
+                              today,
+                              selected,
+                              localizations,
+                              width / 7 - 3.2,
+                              dayHeight,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+              ],
             );
           },
         ),
@@ -636,8 +586,9 @@ class _PickerCalendarState extends State<PickerCalendar> {
     String selected,
     MaterialLocalizations localizations,
     double width,
+    double height,
   ) {
-    if (day < 1 || day > count) return const SizedBox(height: 48);
+    if (day < 1 || day > count) return SizedBox(height: height + 4);
     final date = DateTime(_month.year, _month.month, day);
     final iso = pickerFormatDate(date);
     return PickerButton(
@@ -646,15 +597,20 @@ class _PickerCalendarState extends State<PickerCalendar> {
       selected: iso == selected,
       current: iso == today,
       outlined: false,
-      radii: _calendarRadii(width, 48),
+      // Seven columns must fit even when 48px-wide targets cannot.
+      minimumSize: Size(0, height),
+      radii: _calendarRadii(width, height),
       rotation: iso == selected ? -0.0523599 : 0,
       focusNode: _dayFocus[day - 1],
       onKeyEvent: (_, event) => _key(date, event),
       onPressed: _available(date) ? () => widget.onChanged!(date) : null,
-      child: Text(
-        '$day',
-        style: pickerTextStyle(context, size: 13.6).copyWith(
-          fontWeight: iso == selected ? FontWeight.w700 : FontWeight.normal,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          '$day',
+          style: pickerTextStyle(context, size: 13.6).copyWith(
+            fontWeight: iso == selected ? FontWeight.w700 : FontWeight.normal,
+          ),
         ),
       ),
     );

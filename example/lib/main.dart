@@ -27,10 +27,15 @@ class WelkExampleApp extends StatelessWidget {
           title: kIsWeb ? 'WelkUI Flutter preview' : 'WelkUI Flutter',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: tokens.accent),
-            scaffoldBackgroundColor: tokens.paper,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: tokens.accent,
+              surface: Colors.white,
+            ),
+            scaffoldBackgroundColor: Colors.white,
+            canvasColor: Colors.white,
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFFFFFDF5),
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
               foregroundColor: Color(0xFF242424),
               elevation: 0,
               centerTitle: false,
