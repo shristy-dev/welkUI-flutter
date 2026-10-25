@@ -49,7 +49,7 @@ Or add the dependency to `pubspec.yaml` and run `flutter pub get`:
 
 ```yaml
 dependencies:
-  welkui_flutter: ^0.1.1
+  welkui_flutter: ^0.1.2
 ```
 
 Requires Dart **3.13.4+** and a compatible Flutter SDK satisfying **3.35.0+**.

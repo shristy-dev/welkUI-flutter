@@ -125,7 +125,9 @@ flutter test
 Review and include the changed PNGs in your PR. The widget-gallery comparator
 allows only measured rasterization noise: at most 0.05% changed pixels, each
 with an RGB-channel difference of at most 16/255. Dimensions and alpha remain
-exact. Representative example-screen goldens use the same bounds, while the
+exact. Representative example-screen goldens allow up to 0.15% changed pixels
+to cover measured CI text-edge rasterization noise, retaining the same
+RGB-channel, dimension, and alpha limits, while the
 original menu comparison is pixel-exact. Do not loosen these bounds or
 skip tests to hide a regression.
 

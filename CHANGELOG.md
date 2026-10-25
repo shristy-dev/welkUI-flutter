@@ -1,3 +1,10 @@
+## 0.1.2
+
+* Allow measured CI text-edge rasterization noise in example catalog goldens
+  without changing widget visuals or golden baselines.
+* Preserve stricter package golden defaults, exact dimensions and alpha, and
+  bounded RGB differences; add regression coverage for catalog tolerance limits.
+
 ## 0.1.1
 
 * Simplify snackbar placement to centered `top` and `bottom` positions.
