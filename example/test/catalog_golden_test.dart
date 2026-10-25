@@ -23,6 +23,8 @@ void main() {
       if (comparator is LocalFileComparator) {
         goldenFileComparator = RasterizationGoldenComparator(
           comparator.basedir.resolve('catalog_golden_test.dart'),
+          // CI differs at up to 0.136% of pixels, only on text edges.
+          maxChangedPixelFraction: 0.0015,
         );
         addTearDown(() => goldenFileComparator = comparator);
       }
