@@ -12,8 +12,8 @@ class ExampleThemeMode extends InheritedWidget {
   final bool darkMode;
   final VoidCallback toggle;
 
-  static ExampleThemeMode of(BuildContext context) =>
-      context.dependOnInheritedWidgetOfExactType<ExampleThemeMode>()!;
+  static ExampleThemeMode? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<ExampleThemeMode>();
 
   @override
   bool updateShouldNotify(ExampleThemeMode oldWidget) =>

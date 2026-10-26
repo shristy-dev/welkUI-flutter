@@ -2,8 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:welkui_flutter/welkui_flutter.dart';
 import 'package:welkui_flutter_example/main.dart';
+import 'package:welkui_flutter_example/screens/demo_page.dart';
 
 void main() {
+  testWidgets('standalone demo renders without the app theme controller', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: DemoPage(
+          title: 'Standalone demo',
+          children: [Text('Demo content')],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Demo content'), findsOneWidget);
+    expect(find.byType(WelkIconButton), findsNothing);
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold)).floatingActionButton,
+      isNull,
+    );
+    expect(
+      tester.widget<ListView>(find.byType(ListView)).padding,
+      const EdgeInsets.fromLTRB(20, 12, 20, 32),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final embedMode in [false, true]) {
     testWidgets('app background stays white with embedMode=$embedMode', (
       tester,

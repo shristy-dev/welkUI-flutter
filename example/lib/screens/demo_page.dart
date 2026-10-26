@@ -14,33 +14,38 @@ class DemoPage extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 480;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
-    floatingActionButton: PreviewMode.of(context)
+  Widget build(BuildContext context) {
+    final themeMode = PreviewMode.of(context)
         ? null
-        : WelkIconButton(
-            icon: Icon(
-              ExampleThemeMode.of(context).darkMode
-                  ? Icons.light_mode_outlined
-                  : Icons.dark_mode_outlined,
+        : ExampleThemeMode.maybeOf(context);
+    return Scaffold(
+      appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
+      floatingActionButton: themeMode == null
+          ? null
+          : WelkIconButton(
+              icon: Icon(
+                themeMode.darkMode
+                    ? Icons.light_mode_outlined
+                    : Icons.dark_mode_outlined,
+              ),
+              label: themeMode.darkMode
+                  ? 'Switch to light mode'
+                  : 'Switch to dark mode',
+              onPressed: themeMode.toggle,
             ),
-            label: ExampleThemeMode.of(context).darkMode
-                ? 'Switch to light mode'
-                : 'Switch to dark mode',
-            onPressed: ExampleThemeMode.of(context).toggle,
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            isCompact(context) ? 16 : 20,
+            12,
+            isCompact(context) ? 16 : 20,
+            themeMode == null ? 32 : 104,
           ),
-    body: SafeArea(
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(
-          isCompact(context) ? 16 : 20,
-          12,
-          isCompact(context) ? 16 : 20,
-          PreviewMode.of(context) ? 32 : 104,
+          children: children,
         ),
-        children: children,
       ),
-    ),
-  );
+    );
+  }
 }
 
 class DemoHeading extends StatelessWidget {
