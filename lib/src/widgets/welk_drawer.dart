@@ -16,6 +16,7 @@ Future<T?> showWelkDrawer<T>({
   WelkDrawerPosition position = WelkDrawerPosition.right,
   bool closeOnTapOutside = false,
   bool useRootNavigator = true,
+  bool? overRideDarkMode,
 }) {
   final navigator = Navigator.of(context, rootNavigator: useRootNavigator);
   final themes = InheritedTheme.capture(from: context, to: navigator.context);
@@ -32,10 +33,18 @@ Future<T?> showWelkDrawer<T>({
       barrierDismissible: closeOnTapOutside,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       pageBuilder: (context, animation, secondaryAnimation) => themes.wrap(
-        SafeArea(
-          child: Builder(
-            builder: (context) =>
-                _DrawerPosition(position: position, child: builder(context)),
+        Builder(
+          builder: (context) => WelkTheme.scope(
+            context,
+            overRideDarkMode: overRideDarkMode,
+            child: SafeArea(
+              child: Builder(
+                builder: (context) => _DrawerPosition(
+                  position: position,
+                  child: builder(context),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -100,6 +109,7 @@ class WelkDrawer extends StatelessWidget {
     this.position = WelkDrawerPosition.right,
     this.onClose,
     this.closeLabel = 'Close drawer',
+    this.overRideDarkMode,
   });
 
   final Widget title;
@@ -107,10 +117,17 @@ class WelkDrawer extends StatelessWidget {
   final WelkDrawerPosition position;
   final VoidCallback? onClose;
   final String closeLabel;
+  final bool? overRideDarkMode;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
     final edge =
         context
             .dependOnInheritedWidgetOfExactType<_DrawerPosition>()
@@ -147,7 +164,7 @@ class WelkDrawer extends StatelessWidget {
     };
     final shape = WelkShapeBorder(
       radii: radii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     return Shortcuts(
@@ -207,7 +224,7 @@ class WelkDrawer extends StatelessWidget {
                         child: CustomPaint(
                           painter: WelkHardShadowPainter(
                             shape: shape,
-                            color: theme.ink,
+                            color: theme.shadow,
                             offset: const Offset(6, 6),
                           ),
                           child: Container(
@@ -230,7 +247,7 @@ class WelkDrawer extends StatelessWidget {
                                         color: theme.accent,
                                         border: Border(
                                           bottom: BorderSide(
-                                            color: theme.ink,
+                                            color: theme.outline,
                                             width: theme.borderWidth,
                                           ),
                                         ),
@@ -242,7 +259,10 @@ class WelkDrawer extends StatelessWidget {
                                               namesRoute: true,
                                               header: true,
                                               child: DefaultTextStyle.merge(
-                                                style: const TextStyle(
+                                                style: TextStyle(
+                                                  color: theme.onFill(
+                                                    theme.accent,
+                                                  ),
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -251,16 +271,10 @@ class WelkDrawer extends StatelessWidget {
                                             ),
                                           ),
                                           const SizedBox(width: 16),
-                                          WelkTheme(
-                                            data: theme.copyWith(
-                                              accent: theme.paper,
-                                              accentHover: theme.muted,
-                                            ),
-                                            child: WelkIconButton.close(
-                                              autofocus: true,
-                                              label: closeLabel,
-                                              onPressed: close,
-                                            ),
+                                          WelkIconButton.close(
+                                            autofocus: true,
+                                            label: closeLabel,
+                                            onPressed: close,
                                           ),
                                         ],
                                       ),

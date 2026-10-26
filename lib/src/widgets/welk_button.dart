@@ -29,6 +29,7 @@ class WelkButton extends StatefulWidget {
     this.size = WelkButtonSize.medium,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final Widget child;
@@ -37,6 +38,11 @@ class WelkButton extends StatefulWidget {
   final WelkButtonSize size;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this button.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkButton> createState() => _WelkButtonState();
@@ -57,7 +63,8 @@ class _WelkButtonState extends State<WelkButton>
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final disabled = widget.onPressed == null;
     final reducedMotion = welkAnimationsDisabled(context);
     final duration = reducedMotion
@@ -72,6 +79,9 @@ class _WelkButtonState extends State<WelkButton>
       WelkButtonVariant.info => theme.info,
       WelkButtonVariant.success => theme.success,
     };
+    final foreground = widget.variant == WelkButtonVariant.ghost
+        ? theme.ink
+        : theme.onFill(color);
     final size = switch (widget.size) {
       WelkButtonSize.small => (vertical: 6.4, horizontal: 12.0, font: 14.0),
       WelkButtonSize.medium => (vertical: 10.4, horizontal: 17.6, font: 16.0),
@@ -80,7 +90,7 @@ class _WelkButtonState extends State<WelkButton>
     final pressed = !disabled && feedbackPressed;
     final shape = WelkShapeBorder(
       radii: welkButtonRadii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     final surface = TweenAnimationBuilder<Offset>(
@@ -92,7 +102,7 @@ class _WelkButtonState extends State<WelkButton>
       builder: (context, shadowOffset, child) => CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: theme.ink,
+          color: theme.shadow,
           offset: shadowOffset,
         ),
         child: child,
@@ -105,13 +115,18 @@ class _WelkButtonState extends State<WelkButton>
         ),
         child: DefaultTextStyle.merge(
           style: TextStyle(
-            color: theme.ink,
+            color: foreground,
             fontFamily: theme.fontFamily,
             package: theme.fontPackage,
             fontSize: size.font,
             fontWeight: FontWeight.w700,
           ),
-          child: widget.child,
+          child: theme.isDark
+              ? IconTheme.merge(
+                  data: IconThemeData(color: foreground),
+                  child: widget.child,
+                )
+              : widget.child,
         ),
       ),
     );
@@ -135,35 +150,39 @@ class _WelkButtonState extends State<WelkButton>
       ),
     );
 
-    return Opacity(
-      opacity: disabled ? 0.55 : 1,
-      child: FocusableActionDetector(
-        enabled: !disabled,
-        focusNode: widget.focusNode,
-        autofocus: widget.autofocus,
-        onShowFocusHighlight: (show) => setState(() => _showFocus = show),
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (_) {
-              if (!disabled) _activate();
-              return null;
-            },
-          ),
-        },
-        child: Semantics(
-          button: true,
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: Opacity(
+        opacity: disabled ? 0.55 : 1,
+        child: FocusableActionDetector(
           enabled: !disabled,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: disabled ? null : _activate,
-            onTapDown: disabled ? null : (_) => pressFeedback(),
-            onTapUp: disabled ? null : (_) => releaseFeedback(),
-            onTapCancel: disabled
-                ? null
-                : () => releaseFeedback(cancelled: true),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              child: Center(widthFactor: 1, heightFactor: 1, child: button),
+          focusNode: widget.focusNode,
+          autofocus: widget.autofocus,
+          onShowFocusHighlight: (show) => setState(() => _showFocus = show),
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) {
+                if (!disabled) _activate();
+                return null;
+              },
+            ),
+          },
+          child: Semantics(
+            button: true,
+            enabled: !disabled,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: disabled ? null : _activate,
+              onTapDown: disabled ? null : (_) => pressFeedback(),
+              onTapUp: disabled ? null : (_) => releaseFeedback(),
+              onTapCancel: disabled
+                  ? null
+                  : () => releaseFeedback(cancelled: true),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: Center(widthFactor: 1, heightFactor: 1, child: button),
+              ),
             ),
           ),
         ),

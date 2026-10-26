@@ -90,6 +90,25 @@ class _ButtonScreenState extends State<ButtonScreen> {
           'An action label that wraps on narrow mobile screens',
         ),
       ),
+      const DemoHeading('Local theme overrides'),
+      Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          WelkButton(
+            overRideDarkMode: true,
+            variant: WelkButtonVariant.secondary,
+            onPressed: _activate,
+            child: const Text('Always dark'),
+          ),
+          WelkButton(
+            overRideDarkMode: false,
+            variant: WelkButtonVariant.secondary,
+            onPressed: _activate,
+            child: const Text('Always light'),
+          ),
+        ],
+      ),
     ],
   );
 

@@ -17,6 +17,7 @@ class WelkRadio extends StatefulWidget {
     this.disabled = false,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final bool selected;
@@ -25,6 +26,11 @@ class WelkRadio extends StatefulWidget {
   final bool disabled;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkRadio> createState() => _WelkRadioState();
@@ -64,7 +70,8 @@ class _WelkRadioState extends State<WelkRadio> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final shape = WelkShapeBorder(
       radii: const WelkCornerRadii(
         topLeft: Radius.elliptical(9.2, 10.8),
@@ -72,10 +79,10 @@ class _WelkRadioState extends State<WelkRadio> {
         bottomRight: Radius.elliptical(9.6, 11),
         bottomLeft: Radius.elliptical(10.4, 9.2),
       ),
-      strokeColor: t.ink,
+      strokeColor: t.outline,
       strokeWidth: t.borderWidth,
     );
-    return Opacity(
+    final radio = Opacity(
       opacity: _enabled ? 1 : 0.55,
       child: FocusableActionDetector(
         enabled: _enabled,
@@ -133,7 +140,7 @@ class _WelkRadioState extends State<WelkRadio> {
                                   width: 8.8,
                                   height: 8.8,
                                   decoration: BoxDecoration(
-                                    color: t.ink,
+                                    color: t.onFill(t.accent),
                                     borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(3.872),
                                       topRight: Radius.circular(4.928),
@@ -166,6 +173,11 @@ class _WelkRadioState extends State<WelkRadio> {
           ),
         ),
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: radio,
     );
   }
 }

@@ -17,16 +17,20 @@ class WelkIconButton extends StatefulWidget {
     this.variant = WelkIconButtonVariant.standard,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   }) : _close = false,
        _dialog = false;
 
   /// The unshadowed paper close action used by Welk modal surfaces.
+  ///
+  /// Paints the neutral paper surface (muted on hover) rather than the accent.
   const WelkIconButton.close({
     super.key,
     required this.label,
     this.onPressed,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
     bool dialog = false,
   }) : icon = const Icon(Icons.close),
        variant = WelkIconButtonVariant.standard,
@@ -41,6 +45,11 @@ class WelkIconButton extends StatefulWidget {
   final WelkIconButtonVariant variant;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
   final bool _close;
   final bool _dialog;
 
@@ -64,10 +73,16 @@ class _WelkIconButtonState extends State<WelkIconButton>
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final text = widget.variant == WelkIconButtonVariant.text;
+    final hovered = _hovered && feedbackEnabled;
+    final fill = widget._close
+        ? (hovered ? theme.muted : theme.paper)
+        : (hovered ? theme.accentHover : theme.accent);
+    final foreground = widget._close ? theme.ink : theme.onFill(fill);
     final shape = WelkShapeBorder(
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
       radii: widget._close && !widget._dialog
           ? const WelkCornerRadii(
@@ -95,7 +110,7 @@ class _WelkIconButtonState extends State<WelkIconButton>
     final surface = CustomPaint(
       painter: WelkHardShadowPainter(
         shape: shape,
-        color: theme.ink,
+        color: theme.shadow,
         offset: widget._close
             ? Offset.zero
             : pressed
@@ -109,17 +124,14 @@ class _WelkIconButtonState extends State<WelkIconButton>
           horizontal: text ? 15.6 : 2,
           vertical: text ? 11.6 : 2,
         ),
-        decoration: ShapeDecoration(
-          shape: shape,
-          color: _hovered && feedbackEnabled ? theme.accentHover : theme.accent,
-        ),
+        decoration: ShapeDecoration(shape: shape, color: fill),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ExcludeSemantics(
               child: IconTheme(
-                data: IconThemeData(size: 20, color: theme.ink),
+                data: IconThemeData(size: 20, color: foreground),
                 child: SizedBox(width: 20, height: 20, child: widget.icon),
               ),
             ),
@@ -133,7 +145,7 @@ class _WelkIconButtonState extends State<WelkIconButton>
                     package: theme.fontPackage,
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: theme.ink,
+                    color: foreground,
                   ),
                 ),
               ),
@@ -142,7 +154,7 @@ class _WelkIconButtonState extends State<WelkIconButton>
         ),
       ),
     );
-    return Opacity(
+    final button = Opacity(
       opacity: feedbackEnabled ? 1 : 0.55,
       child: FocusableActionDetector(
         enabled: feedbackEnabled,
@@ -210,6 +222,11 @@ class _WelkIconButtonState extends State<WelkIconButton>
           ),
         ),
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: button,
     );
   }
 }

@@ -13,6 +13,7 @@ class WelkSwitch extends StatefulWidget {
     this.onChanged,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final bool value;
@@ -20,6 +21,11 @@ class WelkSwitch extends StatefulWidget {
   final String label;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkSwitch> createState() => _WelkSwitchState();
@@ -34,7 +40,8 @@ class _WelkSwitchState extends State<WelkSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final enabled = widget.onChanged != null;
     final reducedMotion = welkAnimationsDisabled(context);
     final duration = reducedMotion
@@ -48,13 +55,13 @@ class _WelkSwitchState extends State<WelkSwitch> {
         bottomRight: Radius.elliptical(15, 14),
         bottomLeft: Radius.elliptical(13, 12),
       ),
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     final track = CustomPaint(
       painter: WelkHardShadowPainter(
         shape: trackShape,
-        color: theme.ink,
+        color: theme.shadow,
         offset: theme.switchShadowOffset,
       ),
       child: SizedBox(
@@ -85,7 +92,7 @@ class _WelkSwitchState extends State<WelkSwitch> {
                   color: theme.paper,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.ink,
+                    color: theme.outline,
                     width: theme.borderWidth,
                   ),
                 ),
@@ -96,7 +103,7 @@ class _WelkSwitchState extends State<WelkSwitch> {
       ),
     );
 
-    return Opacity(
+    final control = Opacity(
       opacity: enabled ? 1 : 0.55,
       child: FocusableActionDetector(
         enabled: enabled,
@@ -154,6 +161,11 @@ class _WelkSwitchState extends State<WelkSwitch> {
           ),
         ),
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: control,
     );
   }
 }

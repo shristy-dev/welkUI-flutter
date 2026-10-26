@@ -20,6 +20,7 @@ class WelkCheckBox extends StatefulWidget {
     this.disabled = false,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final bool value;
@@ -29,6 +30,11 @@ class WelkCheckBox extends StatefulWidget {
   final bool disabled;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkCheckBox> createState() => _WelkCheckBoxState();
@@ -68,7 +74,9 @@ class _WelkCheckBoxState extends State<WelkCheckBox> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
+    final fill = widget.value ? t.accent : t.paper;
     final shape = WelkShapeBorder(
       radii: const WelkCornerRadii(
         topLeft: Radius.elliptical(3.6, 2.4),
@@ -76,10 +84,10 @@ class _WelkCheckBoxState extends State<WelkCheckBox> {
         bottomRight: Radius.elliptical(4, 2.8),
         bottomLeft: Radius.elliptical(2, 4),
       ),
-      strokeColor: t.ink,
+      strokeColor: t.outline,
       strokeWidth: t.borderWidth,
     );
-    return Opacity(
+    final checkBox = Opacity(
       opacity: _enabled ? 1 : 0.55,
       child: FocusableActionDetector(
         enabled: _enabled,
@@ -128,14 +136,14 @@ class _WelkCheckBoxState extends State<WelkCheckBox> {
                           width: 20,
                           height: 20,
                           decoration: ShapeDecoration(
-                            color: widget.value ? t.accent : t.paper,
+                            color: fill,
                             shape: shape,
                           ),
                           alignment: Alignment.center,
                           child: CustomPaint(
                             size: const Size(12, 12),
                             painter: _CheckMark(
-                              color: t.ink,
+                              color: widget.value ? t.onFill(fill) : t.ink,
                               visible: widget.value || widget.indeterminate,
                               mixed: widget.indeterminate,
                             ),
@@ -163,6 +171,11 @@ class _WelkCheckBoxState extends State<WelkCheckBox> {
           ),
         ),
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: checkBox,
     );
   }
 }

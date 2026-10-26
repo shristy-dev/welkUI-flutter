@@ -42,6 +42,7 @@ class WelkAttachment extends FormField<List<WelkAttachmentFile>> {
     FormFieldValidator<List<WelkAttachmentFile>>? validator,
     super.onSaved,
     super.autovalidateMode,
+    this.overRideDarkMode,
   }) : assert(maxFileSize == null || maxFileSize > 0),
        assert(maxFiles == null || maxFiles > 0),
        super(
@@ -64,6 +65,11 @@ class WelkAttachment extends FormField<List<WelkAttachmentFile>> {
   final int? maxFileSize;
   final int? maxFiles;
   final bool disabled;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   FormFieldState<List<WelkAttachmentFile>> createState() =>
@@ -160,9 +166,10 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
   }
 
   Widget _build() {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: attachment.overRideDarkMode);
     final shape = WelkShapeBorder(
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
       radii: const WelkCornerRadii(
         topLeft: Radius.elliptical(15, 9),
@@ -184,7 +191,7 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
     if (attachment.accept != null) {
       hint.write(' Accepted: ${attachment.accept}.');
     }
-    return DefaultTextStyle(
+    final field = DefaultTextStyle(
       style: TextStyle(
         fontFamily: theme.fontFamily,
         package: theme.fontPackage,
@@ -195,7 +202,7 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
       child: CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: theme.ink,
+          color: theme.shadow,
           offset: const Offset(3, 3),
         ),
         child: Container(
@@ -235,7 +242,7 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
                     decoration: BoxDecoration(
                       color: theme.error,
                       border: Border.all(
-                        color: theme.ink,
+                        color: theme.outline,
                         width: theme.borderWidth,
                       ),
                       borderRadius: const BorderRadius.only(
@@ -245,7 +252,13 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
                         bottomLeft: Radius.circular(8),
                       ),
                     ),
-                    child: Text(error, style: const TextStyle(fontSize: 12.8)),
+                    child: Text(
+                      error,
+                      style: TextStyle(
+                        fontSize: 12.8,
+                        color: theme.onFill(theme.error),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -265,7 +278,7 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
                           decoration: BoxDecoration(
                             color: theme.muted,
                             border: Border.all(
-                              color: theme.ink,
+                              color: theme.outline,
                               width: theme.borderWidth,
                             ),
                             borderRadius: const BorderRadius.only(
@@ -334,6 +347,11 @@ class _WelkAttachmentState extends FormFieldState<List<WelkAttachmentFile>> {
         ),
       ),
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: attachment.overRideDarkMode,
+      child: field,
+    );
   }
 }
 
@@ -353,8 +371,9 @@ class _AttachmentActionState extends State<_AttachmentAction> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context).resolveColors(context);
     final enabled = widget.onPressed != null;
+    final fill = _hovered && enabled ? theme.accentHover : theme.accent;
     final shape = WelkShapeBorder(
       radii: const WelkCornerRadii(
         topLeft: Radius.circular(8),
@@ -362,7 +381,7 @@ class _AttachmentActionState extends State<_AttachmentAction> {
         bottomRight: Radius.circular(10),
         bottomLeft: Radius.circular(6),
       ),
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     return FocusableActionDetector(
@@ -400,13 +419,11 @@ class _AttachmentActionState extends State<_AttachmentAction> {
                       horizontal: 12 + theme.borderWidth,
                       vertical: 9.6 + theme.borderWidth,
                     ),
-                    decoration: ShapeDecoration(
-                      color: _hovered && enabled
-                          ? theme.accentHover
-                          : theme.accent,
-                      shape: shape,
+                    decoration: ShapeDecoration(color: fill, shape: shape),
+                    child: Text(
+                      widget.label,
+                      style: TextStyle(color: theme.onFill(fill)),
                     ),
-                    child: Text(widget.label),
                   ),
                 ),
               ),

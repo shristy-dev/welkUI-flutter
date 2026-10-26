@@ -22,6 +22,7 @@ class WelkOTPInput extends StatefulWidget {
     this.invalid = false,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   }) : assert(length > 0),
        assert(value.length <= length);
 
@@ -35,6 +36,11 @@ class WelkOTPInput extends StatefulWidget {
   final bool invalid;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkOTPInput> createState() => _WelkOTPInputState();
@@ -103,7 +109,8 @@ class _WelkOTPInputState extends State<WelkOTPInput> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final textStyle = TextStyle(
       fontFamily: t.fontFamily,
       package: t.fontPackage,
@@ -117,7 +124,7 @@ class _WelkOTPInputState extends State<WelkOTPInput> {
       height: 1,
     );
     final active = _controller.selection.baseOffset.clamp(0, widget.length - 1);
-    return DefaultTextStyle(
+    final otp = DefaultTextStyle(
       style: textStyle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,37 +161,13 @@ class _WelkOTPInputState extends State<WelkOTPInput> {
                           children: [
                             for (var i = 0; i < widget.length; i++) ...[
                               if (i > 0) SizedBox(width: gap),
-                              Transform.rotate(
-                                angle: (i.isEven ? -2 : 2) * math.pi / 180,
-                                child: CustomPaint(
-                                  painter: WelkHardShadowPainter(
-                                    shape: _shape(slotWidth, height, t),
-                                    color: t.ink,
-                                    offset: const Offset(3, 3),
-                                  ),
-                                  child: Container(
-                                    width: slotWidth,
-                                    height: height,
-                                    decoration: ShapeDecoration(
-                                      color: widget.invalid
-                                          ? t.error
-                                          : _node.hasFocus && i == active
-                                          ? t.accent
-                                          : t.paper,
-                                      shape: _shape(slotWidth, height, t),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        i < widget.value.length
-                                            ? widget.value[i]
-                                            : '',
-                                        style: digitStyle,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              _slot(
+                                i: i,
+                                active: active,
+                                t: t,
+                                slotWidth: slotWidth,
+                                height: height,
+                                digitStyle: digitStyle,
                               ),
                             ],
                           ],
@@ -254,9 +237,58 @@ class _WelkOTPInputState extends State<WelkOTPInput> {
         ],
       ),
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: otp,
+    );
   }
 
-  WelkShapeBorder _shape(double width, double height, WelkThemeData t) =>
+  Widget _slot({
+    required int i,
+    required int active,
+    required WelkColors t,
+    required double slotWidth,
+    required double height,
+    required TextStyle digitStyle,
+  }) {
+    final filled = widget.invalid || (_node.hasFocus && i == active);
+    final fill = widget.invalid
+        ? t.error
+        : filled
+        ? t.accent
+        : t.paper;
+    return Transform.rotate(
+      angle: (i.isEven ? -2 : 2) * math.pi / 180,
+      child: CustomPaint(
+        painter: WelkHardShadowPainter(
+          shape: _shape(slotWidth, height, t),
+          color: t.shadow,
+          offset: const Offset(3, 3),
+        ),
+        child: Container(
+          width: slotWidth,
+          height: height,
+          decoration: ShapeDecoration(
+            color: fill,
+            shape: _shape(slotWidth, height, t),
+          ),
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              i < widget.value.length ? widget.value[i] : '',
+              style: filled
+                  ? digitStyle.copyWith(color: t.onFill(fill))
+                  : digitStyle,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  WelkShapeBorder _shape(double width, double height, WelkColors t) =>
       WelkShapeBorder(
         radii: WelkCornerRadii(
           topLeft: Radius.elliptical(width * .17, height * .12),
@@ -264,7 +296,7 @@ class _WelkOTPInputState extends State<WelkOTPInput> {
           bottomRight: Radius.elliptical(width * .20, height * .14),
           bottomLeft: Radius.elliptical(width * .12, height * .18),
         ),
-        strokeColor: t.ink,
+        strokeColor: t.outline,
         strokeWidth: t.borderWidth,
       );
 }

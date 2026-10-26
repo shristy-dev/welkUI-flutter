@@ -19,11 +19,13 @@ class WelkTooltip extends StatefulWidget {
     required this.content,
     required this.child,
     this.variant = WelkTooltipVariant.bubble,
+    this.overRideDarkMode,
   });
 
   final String content;
   final Widget child;
   final WelkTooltipVariant variant;
+  final bool? overRideDarkMode;
 
   @override
   State<WelkTooltip> createState() => _WelkTooltipState();
@@ -33,12 +35,17 @@ class _WelkTooltipState extends State<WelkTooltip> {
   final _tooltip = GlobalKey<TooltipState>();
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
-    final shape = _TooltipShape(
-      bubble: widget.variant == WelkTooltipVariant.bubble,
-      ink: theme.ink,
-      strokeWidth: theme.borderWidth,
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
+    final themes = InheritedTheme.capture(
+      from: context,
+      to: Overlay.of(context).context,
     );
     return Shortcuts(
       shortcuts: const {
@@ -68,7 +75,12 @@ class _WelkTooltipState extends State<WelkTooltip> {
               key: _tooltip,
               excludeFromSemantics: true,
               richMessage: WidgetSpan(
-                child: _TooltipSurface(content: widget.content, shape: shape),
+                child: themes.wrap(
+                  _TooltipSurface(
+                    content: widget.content,
+                    bubble: widget.variant == WelkTooltipVariant.bubble,
+                  ),
+                ),
               ),
               triggerMode: TooltipTriggerMode.longPress,
               preferBelow: false,
@@ -107,13 +119,18 @@ class _WelkTooltipState extends State<WelkTooltip> {
 }
 
 class _TooltipSurface extends StatelessWidget {
-  const _TooltipSurface({required this.content, required this.shape});
+  const _TooltipSurface({required this.content, required this.bubble});
   final String content;
-  final ShapeBorder shape;
+  final bool bubble;
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context).resolveColors(context);
+    final shape = _TooltipShape(
+      bubble: bubble,
+      ink: theme.outline,
+      strokeWidth: theme.borderWidth,
+    );
     final reduced = welkAnimationsDisabled(context);
     return TweenAnimationBuilder<double>(
       duration: reduced ? Duration.zero : const Duration(milliseconds: 220),
@@ -134,7 +151,7 @@ class _TooltipSurface extends StatelessWidget {
       child: CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: theme.ink,
+          color: theme.shadow,
           offset: const Offset(3, 3),
         ),
         child: Container(

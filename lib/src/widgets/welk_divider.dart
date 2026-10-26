@@ -16,6 +16,7 @@ class WelkDivider extends StatelessWidget {
     this.length,
     this.color,
     this.semanticLabel,
+    this.overRideDarkMode,
   }) : assert(thickness > 0 && thickness < double.infinity),
        assert(length == null || (length >= 0 && length < double.infinity));
 
@@ -25,6 +26,11 @@ class WelkDivider extends StatelessWidget {
   final double? length;
   final Color? color;
   final String? semanticLabel;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -45,7 +51,13 @@ class WelkDivider extends StatelessWidget {
               orientation,
               variant,
               thickness,
-              color ?? WelkTheme.of(context).ink,
+              color ??
+                  WelkTheme.of(context)
+                      .resolveColors(
+                        context,
+                        overRideDarkMode: overRideDarkMode,
+                      )
+                      .outline,
             ),
           ),
         );

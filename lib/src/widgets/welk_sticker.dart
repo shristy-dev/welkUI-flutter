@@ -20,6 +20,7 @@ class WelkSticker extends StatefulWidget {
     this.elevateOnHover = false,
     this.onLoad,
     this.onError,
+    this.overRideDarkMode,
   }) : assert(outlineThickness >= 0 && outlineThickness < double.infinity),
        assert(width > 0 && width < double.infinity),
        assert(height > 0 && height < double.infinity);
@@ -34,6 +35,11 @@ class WelkSticker extends StatefulWidget {
   final bool elevateOnHover;
   final VoidCallback? onLoad;
   final ValueChanged<Object>? onError;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkSticker> createState() => _WelkStickerState();
@@ -135,7 +141,8 @@ class _WelkStickerState extends State<WelkSticker> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final reduced = welkAnimationsDisabled(context);
     final padding = widget.outlineThickness + 4;
     return Semantics(
@@ -183,7 +190,7 @@ class _WelkStickerState extends State<WelkSticker> {
                     decoration: BoxDecoration(
                       color: theme.paper,
                       border: Border.all(
-                        color: theme.ink,
+                        color: theme.outline,
                         width: theme.borderWidth,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -214,6 +221,9 @@ class _WelkStickerState extends State<WelkSticker> {
                           widget.outlineThickness,
                           widget.outlineColor,
                           padding,
+                          theme.isDark
+                              ? theme.shadow.withValues(alpha: .4)
+                              : const Color(0x66242424),
                         ),
                       ),
                     ),
@@ -226,11 +236,18 @@ class _WelkStickerState extends State<WelkSticker> {
 }
 
 class _StickerPainter extends CustomPainter {
-  const _StickerPainter(this.image, this.thickness, this.color, this.padding);
+  const _StickerPainter(
+    this.image,
+    this.thickness,
+    this.color,
+    this.padding,
+    this.shadow,
+  );
   final ui.Image? image;
   final double thickness;
   final Color color;
   final double padding;
+  final Color shadow;
 
   void _draw(Canvas canvas, Rect rect) {
     paintImage(
@@ -255,10 +272,7 @@ class _StickerPainter extends CustomPainter {
     canvas.saveLayer(
       layer,
       Paint()
-        ..colorFilter = const ColorFilter.mode(
-          Color(0x66242424),
-          BlendMode.srcIn,
-        )
+        ..colorFilter = ColorFilter.mode(shadow, BlendMode.srcIn)
         ..imageFilter = ui.ImageFilter.compose(
           outer: ui.ImageFilter.blur(sigmaX: 1, sigmaY: 1),
           inner: ui.ImageFilter.dilate(radiusX: thickness, radiusY: thickness),
@@ -288,5 +302,6 @@ class _StickerPainter extends CustomPainter {
       image != oldDelegate.image ||
       thickness != oldDelegate.thickness ||
       color != oldDelegate.color ||
-      padding != oldDelegate.padding;
+      padding != oldDelegate.padding ||
+      shadow != oldDelegate.shadow;
 }

@@ -21,6 +21,7 @@ class WelkDateInput extends StatelessWidget {
     this.validator,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -35,9 +36,11 @@ class WelkDateInput extends StatelessWidget {
   final String? Function(DateTime?)? validator;
   final FocusNode? focusNode;
   final bool autofocus;
+  final bool? overRideDarkMode;
 
   @override
   Widget build(BuildContext context) => PickerDateControl(
+    overRideDarkMode: overRideDarkMode,
     label: label,
     value: value,
     onChanged: onChanged,

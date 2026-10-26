@@ -67,6 +67,7 @@ class WelkTimePicker extends StatefulWidget {
     this.validator,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -77,6 +78,7 @@ class WelkTimePicker extends StatefulWidget {
   final String? Function(WelkTime?)? validator;
   final FocusNode? focusNode;
   final bool autofocus;
+  final bool? overRideDarkMode;
 
   @override
   State<WelkTimePicker> createState() => _WelkTimePickerState();
@@ -152,7 +154,13 @@ class _WelkTimePickerState extends State<WelkTimePicker> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
     final time = widget.value ?? const WelkTime(hour: 0, minute: 0);
     final enabled = widget.onChanged != null;
     return SizedBox(
@@ -290,7 +298,7 @@ class _TimeColumnState extends State<_TimeColumn> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context).resolveColors(context);
     return Column(
       children: [
         Text(

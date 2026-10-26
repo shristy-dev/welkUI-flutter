@@ -16,16 +16,24 @@ Future<T?> showWelkDialog<T>({
   required WidgetBuilder builder,
   bool closeOnTapOutside = false,
   bool useRootNavigator = true,
-}) => showDialog<T>(
-  context: context,
-  builder: builder,
-  barrierDismissible: closeOnTapOutside,
-  barrierColor: const Color(0x73000000),
-  useRootNavigator: useRootNavigator,
-  animationStyle: welkAnimationsDisabled(context)
-      ? AnimationStyle.noAnimation
-      : const AnimationStyle(duration: Duration(milliseconds: 180)),
-);
+  bool? overRideDarkMode,
+}) {
+  return showDialog<T>(
+    context: context,
+    // showDialog captures local inherited themes to its target Navigator.
+    builder: (context) => WelkTheme.scope(
+      context,
+      overRideDarkMode: overRideDarkMode,
+      child: Builder(builder: builder),
+    ),
+    barrierDismissible: closeOnTapOutside,
+    barrierColor: const Color(0x73000000),
+    useRootNavigator: useRootNavigator,
+    animationStyle: welkAnimationsDisabled(context)
+        ? AnimationStyle.noAnimation
+        : const AnimationStyle(duration: Duration(milliseconds: 180)),
+  );
+}
 
 /// The paper dialog surface; present with [showWelkDialog].
 ///
@@ -45,6 +53,7 @@ class WelkDialog extends StatelessWidget {
     this.noText = 'No',
     this.onYesPressed,
     this.onNoPressed,
+    this.overRideDarkMode,
   });
 
   final Widget title;
@@ -59,10 +68,17 @@ class WelkDialog extends StatelessWidget {
   final String noText;
   final VoidCallback? onYesPressed;
   final VoidCallback? onNoPressed;
+  final bool? overRideDarkMode;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
     void close() => (onClose ?? () => Navigator.of(context).pop())();
     final color = switch (variant) {
       WelkDialogVariant.alert => theme.accent,
@@ -115,7 +131,7 @@ class WelkDialog extends StatelessWidget {
                               color: color,
                               border: Border(
                                 bottom: BorderSide(
-                                  color: theme.ink,
+                                  color: theme.outline,
                                   width: theme.borderWidth,
                                 ),
                               ),
@@ -127,7 +143,8 @@ class WelkDialog extends StatelessWidget {
                                     namesRoute: true,
                                     header: true,
                                     child: DefaultTextStyle.merge(
-                                      style: const TextStyle(
+                                      style: TextStyle(
+                                        color: theme.onFill(color),
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -139,7 +156,6 @@ class WelkDialog extends StatelessWidget {
                                 _DialogClose(
                                   label: closeLabel,
                                   onPressed: close,
-                                  theme: theme,
                                 ),
                               ],
                             ),
@@ -192,38 +208,30 @@ class WelkDialog extends StatelessWidget {
 }
 
 class _DialogClose extends StatelessWidget {
-  const _DialogClose({
-    required this.label,
-    required this.onPressed,
-    required this.theme,
-  });
+  const _DialogClose({required this.label, required this.onPressed});
 
   final String label;
   final VoidCallback onPressed;
-  final WelkThemeData theme;
 
   @override
-  Widget build(BuildContext context) => WelkTheme(
-    data: theme.copyWith(accent: theme.paper, accentHover: theme.muted),
-    child: WelkIconButton.close(
-      dialog: true,
-      autofocus: true,
-      label: label,
-      onPressed: onPressed,
-    ),
+  Widget build(BuildContext context) => WelkIconButton.close(
+    dialog: true,
+    autofocus: true,
+    label: label,
+    onPressed: onPressed,
   );
 }
 
 class _DialogSurface extends StatelessWidget {
   const _DialogSurface({required this.theme, required this.child});
 
-  final WelkThemeData theme;
+  final WelkColors theme;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final shape = _DialogShape(
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     return Semantics(
@@ -240,7 +248,7 @@ class _DialogSurface extends StatelessWidget {
         child: CustomPaint(
           painter: WelkHardShadowPainter(
             shape: shape,
-            color: theme.ink,
+            color: theme.shadow,
             offset: const Offset(6, 6),
           ),
           child: Container(

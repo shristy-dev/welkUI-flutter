@@ -25,6 +25,7 @@ class WelkDatePicker extends StatelessWidget {
     this.validator,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -39,9 +40,11 @@ class WelkDatePicker extends StatelessWidget {
   final String? Function(DateTime?)? validator;
   final FocusNode? focusNode;
   final bool autofocus;
+  final bool? overRideDarkMode;
 
   @override
   Widget build(BuildContext context) => PickerDateControl(
+    overRideDarkMode: overRideDarkMode,
     label: label,
     value: value,
     onChanged: onChanged,
@@ -70,6 +73,7 @@ class PickerDateControl extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.popup = false,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -83,6 +87,7 @@ class PickerDateControl extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final bool popup;
+  final bool? overRideDarkMode;
 
   @override
   State<PickerDateControl> createState() => _PickerDateControlState();
@@ -171,10 +176,8 @@ class _PickerDateControlState extends State<PickerDateControl> {
     final direction = Directionality.of(context);
     final textScaler = MediaQuery.textScalerOf(context);
     final reducedMotion = welkAnimationsDisabled(context);
-    final theme = WelkTheme.of(context);
-    final labelStyle = pickerTextStyle(context)
-        .copyWith(fontWeight: FontWeight.w700);
     final navigator = Navigator.of(context, rootNavigator: true);
+    final themes = InheritedTheme.capture(from: context, to: navigator.context);
     final route = RawDialogRoute<DateTime>(
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
@@ -191,71 +194,83 @@ class _PickerDateControlState extends State<PickerDateControl> {
               textScaler: textScaler,
               disableAnimations: reducedMotion,
             ),
-            child: StatefulBuilder(
-              builder: (popupContext, setState) {
-                if (!mounted) return const SizedBox.shrink();
-                _refreshDialog = setState;
-                return WelkTheme(
-                  data: theme,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        24,
-                        16,
-                        24 + MediaQuery.viewInsetsOf(dialogContext).bottom,
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: 336,
-                          child: SingleChildScrollView(
-                            child: Semantics(
-                              scopesRoute: true,
-                              namesRoute: true,
-                              label: 'Choose a date',
-                              explicitChildNodes: true,
-                              child: Material(
-                                type: MaterialType.transparency,
-                                child: PickerSurface(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Text(widget.label, style: labelStyle),
-                                      const SizedBox(height: 8),
-                                      PickerCalendar(
-                                        value: widget.value,
-                                        minDate: widget.minDate,
-                                        maxDate: widget.maxDate,
-                                        initialDisplayDate:
-                                            widget.initialDisplayDate,
-                                        onChanged: widget.onChanged == null
-                                            ? null
-                                            : (date) =>
-                                                  Navigator.of(dialogContext)
-                                                      .pop(date),
+            child: themes.wrap(
+              Builder(
+                builder: (context) => WelkTheme.scope(
+                  context,
+                  overRideDarkMode: widget.overRideDarkMode,
+                  child: StatefulBuilder(
+                    builder: (popupContext, setState) {
+                      if (!mounted) return const SizedBox.shrink();
+                      _refreshDialog = setState;
+                      return SafeArea(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            24,
+                            16,
+                            24 + MediaQuery.viewInsetsOf(dialogContext).bottom,
+                          ),
+                          child: Center(
+                            child: SizedBox(
+                              width: 336,
+                              child: SingleChildScrollView(
+                                child: Semantics(
+                                  scopesRoute: true,
+                                  namesRoute: true,
+                                  label: 'Choose a date',
+                                  explicitChildNodes: true,
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: PickerSurface(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Text(
+                                            widget.label,
+                                            style: pickerTextStyle(popupContext)
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          PickerCalendar(
+                                            value: widget.value,
+                                            minDate: widget.minDate,
+                                            maxDate: widget.maxDate,
+                                            initialDisplayDate:
+                                                widget.initialDisplayDate,
+                                            onChanged: widget.onChanged == null
+                                                ? null
+                                                : (date) => Navigator.of(
+                                                    dialogContext,
+                                                  ).pop(date),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          PickerButton(
+                                            label: 'Close calendar',
+                                            onPressed: () =>
+                                                Navigator.of(dialogContext)
+                                                    .pop(),
+                                            child: const Text('Close'),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 8),
-                                      PickerButton(
-                                        label: 'Close calendar',
-                                        onPressed: () =>
-                                            Navigator.of(dialogContext).pop(),
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         );
@@ -272,7 +287,13 @@ class _PickerDateControlState extends State<PickerDateControl> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
     pickerValidateDates(widget.value, widget.minDate, widget.maxDate);
     pickerValidateDates(widget.initialDisplayDate, null, null);
     final enabled = widget.onChanged != null;
@@ -292,12 +313,14 @@ class _PickerDateControlState extends State<PickerDateControl> {
               minimumSize: Size.zero,
               visualSize: const Size(36, 36),
               onPressed: enabled ? _openCalendar : null,
-              color: WelkTheme.of(context).accent,
+              color: WelkTheme.of(context).resolveColors(context).accent,
               rotation: -0.0349066,
               child: Icon(
                 Icons.calendar_today_outlined,
                 size: 18,
-                color: WelkTheme.of(context).ink,
+                color: WelkTheme.of(context).resolveColors(context).isDark
+                    ? null
+                    : WelkTheme.of(context).ink,
               ),
             )
           : null,
@@ -336,6 +359,7 @@ class PickerCalendar extends StatefulWidget {
     this.maxDate,
     this.initialDisplayDate,
     this.onChanged,
+    this.overRideDarkMode,
   });
 
   final DateTime? value;
@@ -343,6 +367,7 @@ class PickerCalendar extends StatefulWidget {
   final DateTime? maxDate;
   final DateTime? initialDisplayDate;
   final ValueChanged<DateTime>? onChanged;
+  final bool? overRideDarkMode;
 
   @override
   State<PickerCalendar> createState() => _PickerCalendarState();
@@ -438,8 +463,14 @@ class _PickerCalendarState extends State<PickerCalendar> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
     final localizations = MaterialLocalizations.of(context);
     final previous = DateTime(_month.year, _month.month - 1);
     final next = DateTime(_month.year, _month.month + 1);
@@ -480,7 +511,7 @@ class _PickerCalendarState extends State<PickerCalendar> {
                   Directionality.of(context) == TextDirection.rtl
                       ? Icons.chevron_right
                       : Icons.chevron_left,
-                  color: theme.ink,
+                  color: theme.isDark ? null : theme.ink,
                 ),
               ),
               const SizedBox(width: 8),
@@ -490,8 +521,10 @@ class _PickerCalendarState extends State<PickerCalendar> {
                   child: Text(
                     localizations.formatMonthYear(_month),
                     textAlign: TextAlign.center,
-                    style: pickerTextStyle(context)
-                        .copyWith(fontWeight: FontWeight.w700),
+                    style: pickerTextStyle(context).copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.onFill(theme.accent),
+                    ),
                   ),
                 ),
               ),
@@ -506,7 +539,7 @@ class _PickerCalendarState extends State<PickerCalendar> {
                   Directionality.of(context) == TextDirection.rtl
                       ? Icons.chevron_left
                       : Icons.chevron_right,
-                  color: theme.ink,
+                  color: theme.isDark ? null : theme.ink,
                 ),
               ),
             ],
@@ -608,7 +641,7 @@ class _PickerCalendarState extends State<PickerCalendar> {
         fit: BoxFit.scaleDown,
         child: Text(
           '$day',
-          style: pickerTextStyle(context, size: 13.6).copyWith(
+          style: const TextStyle(fontSize: 13.6, height: 1.5).copyWith(
             fontWeight: iso == selected ? FontWeight.w700 : FontWeight.normal,
           ),
         ),

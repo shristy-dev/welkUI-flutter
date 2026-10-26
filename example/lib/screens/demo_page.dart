@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:welkui_flutter/welkui_flutter.dart';
 
+import '../example_theme_mode.dart';
 import '../preview_mode.dart';
 
 class DemoPage extends StatelessWidget {
@@ -12,20 +14,38 @@ class DemoPage extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 480;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
-    body: SafeArea(
-      child: ListView(
-        padding: EdgeInsets.fromLTRB(
-          isCompact(context) ? 16 : 20,
-          12,
-          isCompact(context) ? 16 : 20,
-          32,
+  Widget build(BuildContext context) {
+    final themeMode = PreviewMode.of(context)
+        ? null
+        : ExampleThemeMode.maybeOf(context);
+    return Scaffold(
+      appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
+      floatingActionButton: themeMode == null
+          ? null
+          : WelkIconButton(
+              icon: Icon(
+                themeMode.darkMode
+                    ? Icons.light_mode_outlined
+                    : Icons.dark_mode_outlined,
+              ),
+              label: themeMode.darkMode
+                  ? 'Switch to light mode'
+                  : 'Switch to dark mode',
+              onPressed: themeMode.toggle,
+            ),
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            isCompact(context) ? 16 : 20,
+            12,
+            isCompact(context) ? 16 : 20,
+            themeMode == null ? 32 : 104,
+          ),
+          children: children,
         ),
-        children: children,
       ),
-    ),
-  );
+    );
+  }
 }
 
 class DemoHeading extends StatelessWidget {

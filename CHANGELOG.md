@@ -1,3 +1,16 @@
+## Unreleased
+
+* Select dedicated black and white avatar assets for light and dark modes
+  without filtering custom icons or profile images.
+
+* Add a global `WelkThemeData.darkMode` preference and customizable dark palette
+  tokens across all widgets, with `overRideDarkMode` local overrides.
+* Carry local dark-mode overrides through nested widgets, popups, and overlays.
+* Add a floating `WelkIconButton` global theme toggle to example app screens.
+* Use black-tinted semantic fills, black borders, whitish-gray hard shadows,
+  and contrasting text and icons in dark mode, with customizable
+  `darkButtonTint`, `darkShadow`, and `darkMuted` tokens.
+
 ## 0.1.5
 
 * Use a compact 36px calendar container inside the date input field while
