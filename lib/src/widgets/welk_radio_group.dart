@@ -26,6 +26,7 @@ class WelkRadioGroup extends StatefulWidget {
     this.onChanged,
     this.disabled = false,
     this.isRequired = false,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -34,6 +35,11 @@ class WelkRadioGroup extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final bool disabled;
   final bool isRequired;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkRadioGroup> createState() => _WelkRadioGroupState();
@@ -80,7 +86,8 @@ class _WelkRadioGroupState extends State<WelkRadioGroup> {
           widget.options.length,
       'Radio option values must be unique.',
     );
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final enabledOptions = widget.options.where((o) => !o.disabled);
     final tabValue = enabledOptions.any((o) => o.value == widget.value)
@@ -95,7 +102,7 @@ class _WelkRadioGroupState extends State<WelkRadioGroup> {
               .skipTraversal =
           option.value != tabValue;
     }
-    return Semantics(
+    final group = Semantics(
       container: true,
       explicitChildNodes: true,
       label: widget.isRequired ? '${widget.label}, required' : widget.label,
@@ -151,10 +158,16 @@ class _WelkRadioGroupState extends State<WelkRadioGroup> {
                 disabled: !_enabled || option.disabled,
                 focusNode: _nodes[option.value],
                 onChanged: (_) => widget.onChanged?.call(option.value),
+                overRideDarkMode: widget.overRideDarkMode,
               ),
             ),
         ],
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: group,
     );
   }
 }

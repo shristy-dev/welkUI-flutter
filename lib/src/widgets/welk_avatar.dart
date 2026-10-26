@@ -18,6 +18,7 @@ class WelkAvatar extends StatefulWidget {
     this.size = WelkAvatarSize.medium,
     this.color,
     this.growOnHover = false,
+    this.overRideDarkMode,
   });
 
   final String alt;
@@ -28,6 +29,11 @@ class WelkAvatar extends StatefulWidget {
   final Color? color;
   final bool growOnHover;
 
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
+
   @override
   State<WelkAvatar> createState() => _WelkAvatarState();
 }
@@ -37,29 +43,38 @@ class _WelkAvatarState extends State<WelkAvatar> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
+    // Custom colors are used as supplied; only the neutral default adapts.
+    final background = widget.color ?? theme.paper;
+    final foreground = theme.onFill(background);
     final extent = switch (widget.size) {
       WelkAvatarSize.small => 32.0,
       WelkAvatarSize.medium => 48.0,
       WelkAvatarSize.large => 64.0,
     };
     final shape = CircleBorder(
-      side: BorderSide(color: theme.ink, width: theme.borderWidth),
+      side: BorderSide(color: theme.outline, width: theme.borderWidth),
     );
+    final portraitName = switch (widget.variant) {
+      WelkAvatarVariant.user || WelkAvatarVariant.maleUser =>
+        theme.isDark ? 'male_user_white' : 'male_user',
+      WelkAvatarVariant.femaleUser =>
+        theme.isDark ? 'female_user_white' : 'female_user',
+      WelkAvatarVariant.maleAdmin =>
+        theme.isDark ? 'male_admin_white' : 'male_admin',
+      WelkAvatarVariant.femaleAdmin =>
+        theme.isDark ? 'female_admin_white' : 'female_admin',
+    };
     final portrait = Padding(
       padding: EdgeInsets.all(extent * .12),
       child: Image.asset(
-        'assets/portraits/${switch (widget.variant) {
-          WelkAvatarVariant.user || WelkAvatarVariant.maleUser => 'male_user',
-          WelkAvatarVariant.femaleUser => 'female_user',
-          WelkAvatarVariant.maleAdmin => 'male_admin',
-          WelkAvatarVariant.femaleAdmin => 'female_admin',
-        }}.png',
+        'assets/icons/person/$portraitName.png',
         package: 'welkui_flutter',
         fit: BoxFit.contain,
         errorBuilder: (context, error, stack) => CustomPaint(
           painter: _PortraitPainter(
-            theme.ink,
+            foreground,
             widget.variant == WelkAvatarVariant.femaleUser ||
                 widget.variant == WelkAvatarVariant.femaleAdmin,
             widget.variant == WelkAvatarVariant.maleAdmin ||
@@ -68,7 +83,7 @@ class _WelkAvatarState extends State<WelkAvatar> {
         ),
       ),
     );
-    return Semantics(
+    final avatar = Semantics(
       image: true,
       label: widget.alt,
       child: ExcludeSemantics(
@@ -88,16 +103,13 @@ class _WelkAvatarState extends State<WelkAvatar> {
             child: CustomPaint(
               painter: WelkHardShadowPainter(
                 shape: shape,
-                color: theme.ink,
+                color: theme.shadow,
                 offset: theme.buttonShadowOffset,
               ),
               child: Container(
                 width: extent,
                 height: extent,
-                decoration: ShapeDecoration(
-                  shape: shape,
-                  color: widget.color ?? theme.paper,
-                ),
+                decoration: ShapeDecoration(shape: shape, color: background),
                 child: Padding(
                   padding: EdgeInsets.all(theme.borderWidth),
                   child: ClipOval(
@@ -111,7 +123,14 @@ class _WelkAvatarState extends State<WelkAvatar> {
                         ? Center(
                             child: SizedBox.square(
                               dimension: extent * .65,
-                              child: FittedBox(child: widget.icon!),
+                              child: FittedBox(
+                                child: theme.isDark
+                                    ? IconTheme.merge(
+                                        data: IconThemeData(color: foreground),
+                                        child: widget.icon!,
+                                      )
+                                    : widget.icon!,
+                              ),
                             ),
                           )
                         : portrait,
@@ -122,6 +141,11 @@ class _WelkAvatarState extends State<WelkAvatar> {
           ),
         ),
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: avatar,
     );
   }
 }

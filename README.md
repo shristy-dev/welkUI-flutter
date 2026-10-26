@@ -77,8 +77,8 @@ globally. Rebuild the provider with `data.copyWith(darkMode: true)` or `false`
 to switch modes. When `darkMode` is null (the default), widgets follow
 Flutter's `ThemeData.brightness`.
 
-Currently only `WelkButton` consumes the dark-mode preference; other widgets
-retain their existing appearance. The example app includes a floating
+All WelkUI widgets consume the dark-mode preference, including controls,
+content, pickers, and overlays. The example app includes a floating
 `WelkIconButton` theme toggle on non-embedded screens.
 
 ```dart
@@ -88,12 +88,21 @@ WelkTheme(
 )
 ```
 
-Set `overRideDarkMode` on an individual `WelkButton` to force dark (`true`) or
-light (`false`), regardless of the global setting. Omit it to inherit.
+Set `overRideDarkMode` on any widget to force dark (`true`) or light (`false`),
+regardless of the global setting. Omit it to inherit. Container overrides also
+flow into nested WelkUI widgets; dialog, drawer, and snackbar show functions
+accept the same override.
+
+Place the global `WelkTheme` above `MaterialApp` so open popups and overlays
+can also follow its updates. Local themes are carried into overlays when opened.
+
 Dark mode adds a 10% black tint to semantic variant fills, with black borders,
 whitish-gray hard shadows, and contrasting text and icons. Secondary buttons use
 a charcoal-gray surface, and ghost buttons remain transparent.
-Customize the dark palette with `darkPaper`, `darkInk`, `darkOutline`,
+Neutral surfaces and text adapt to dark mode. QR modules retain a light backing
+and dark modules for scanning. Avatar portraits use black assets in light mode
+and white assets in dark mode; custom icons and profile images are not filtered.
+Customize the dark palette with `darkPaper`, `darkMuted`, `darkInk`, `darkOutline`,
 `darkShadow`, `darkButtonTint`, and `darkFocus` design tokens.
 
 ```dart

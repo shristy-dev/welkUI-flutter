@@ -63,38 +63,25 @@ class _WelkButtonState extends State<WelkButton>
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
-    final isDark = theme.resolveDarkMode(
-      context,
-      overRideDarkMode: widget.overRideDarkMode,
-    );
-    final outline = isDark ? theme.darkOutline : theme.ink;
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final disabled = widget.onPressed == null;
     final reducedMotion = welkAnimationsDisabled(context);
     final duration = reducedMotion
         ? Duration.zero
         : WelkTapFeedback.transitionDuration;
-    final baseColor = switch (widget.variant) {
+    final color = switch (widget.variant) {
       WelkButtonVariant.primary => theme.accent,
-      WelkButtonVariant.secondary => isDark ? theme.darkPaper : theme.paper,
+      WelkButtonVariant.secondary => theme.paper,
       WelkButtonVariant.error => theme.error,
       WelkButtonVariant.warning => theme.warning,
       WelkButtonVariant.ghost => Colors.transparent,
       WelkButtonVariant.info => theme.info,
       WelkButtonVariant.success => theme.success,
     };
-    final color =
-        isDark &&
-            widget.variant != WelkButtonVariant.secondary &&
-            widget.variant != WelkButtonVariant.ghost
-        ? Color.alphaBlend(theme.darkButtonTint, baseColor)
-        : baseColor;
-    final foreground = !isDark
+    final foreground = widget.variant == WelkButtonVariant.ghost
         ? theme.ink
-        : widget.variant == WelkButtonVariant.ghost ||
-              ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-        ? theme.darkInk
-        : const Color(0xFF242424);
+        : theme.onFill(color);
     final size = switch (widget.size) {
       WelkButtonSize.small => (vertical: 6.4, horizontal: 12.0, font: 14.0),
       WelkButtonSize.medium => (vertical: 10.4, horizontal: 17.6, font: 16.0),
@@ -103,7 +90,7 @@ class _WelkButtonState extends State<WelkButton>
     final pressed = !disabled && feedbackPressed;
     final shape = WelkShapeBorder(
       radii: welkButtonRadii,
-      strokeColor: outline,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     final surface = TweenAnimationBuilder<Offset>(
@@ -115,7 +102,7 @@ class _WelkButtonState extends State<WelkButton>
       builder: (context, shadowOffset, child) => CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: isDark ? theme.darkShadow : theme.ink,
+          color: theme.shadow,
           offset: shadowOffset,
         ),
         child: child,
@@ -134,7 +121,7 @@ class _WelkButtonState extends State<WelkButton>
             fontSize: size.font,
             fontWeight: FontWeight.w700,
           ),
-          child: isDark
+          child: theme.isDark
               ? IconTheme.merge(
                   data: IconThemeData(color: foreground),
                   child: widget.child,
@@ -155,7 +142,7 @@ class _WelkButtonState extends State<WelkButton>
         angle: -0.017453292519943295,
         child: WelkFocusRing(
           visible: _showFocus && !disabled,
-          color: isDark ? theme.darkFocus : theme.focus,
+          color: theme.focus,
           shape: shape,
           gap: 5,
           child: surface,
@@ -163,35 +150,39 @@ class _WelkButtonState extends State<WelkButton>
       ),
     );
 
-    return Opacity(
-      opacity: disabled ? 0.55 : 1,
-      child: FocusableActionDetector(
-        enabled: !disabled,
-        focusNode: widget.focusNode,
-        autofocus: widget.autofocus,
-        onShowFocusHighlight: (show) => setState(() => _showFocus = show),
-        actions: {
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (_) {
-              if (!disabled) _activate();
-              return null;
-            },
-          ),
-        },
-        child: Semantics(
-          button: true,
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: Opacity(
+        opacity: disabled ? 0.55 : 1,
+        child: FocusableActionDetector(
           enabled: !disabled,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: disabled ? null : _activate,
-            onTapDown: disabled ? null : (_) => pressFeedback(),
-            onTapUp: disabled ? null : (_) => releaseFeedback(),
-            onTapCancel: disabled
-                ? null
-                : () => releaseFeedback(cancelled: true),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              child: Center(widthFactor: 1, heightFactor: 1, child: button),
+          focusNode: widget.focusNode,
+          autofocus: widget.autofocus,
+          onShowFocusHighlight: (show) => setState(() => _showFocus = show),
+          actions: {
+            ActivateIntent: CallbackAction<ActivateIntent>(
+              onInvoke: (_) {
+                if (!disabled) _activate();
+                return null;
+              },
+            ),
+          },
+          child: Semantics(
+            button: true,
+            enabled: !disabled,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: disabled ? null : _activate,
+              onTapDown: disabled ? null : (_) => pressFeedback(),
+              onTapUp: disabled ? null : (_) => releaseFeedback(),
+              onTapCancel: disabled
+                  ? null
+                  : () => releaseFeedback(cancelled: true),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: Center(widthFactor: 1, heightFactor: 1, child: button),
+              ),
             ),
           ),
         ),

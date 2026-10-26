@@ -138,11 +138,9 @@ void main() {
       );
       expect(
         foreground(tester),
-        ghost ||
-                ThemeData.estimateBrightnessForColor(expectedColor) ==
-                    Brightness.dark
+        ghost
             ? theme.darkInk
-            : theme.ink,
+            : const WelkColors(theme, isDark: true).onFill(expectedColor),
       );
     }
   });

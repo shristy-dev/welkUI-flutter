@@ -37,6 +37,7 @@ class WelkMenu extends StatefulWidget {
     this.activeRoute,
     this.collapsible = false,
     this.semanticLabel = 'Main navigation',
+    this.overRideDarkMode,
   });
 
   final List<WelkMenuItem> items;
@@ -47,6 +48,11 @@ class WelkMenu extends StatefulWidget {
   final String? activeRoute;
   final bool collapsible;
   final String semanticLabel;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkMenu> createState() => _WelkMenuState();
@@ -124,9 +130,10 @@ class _WelkMenuState extends State<WelkMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final visible = !widget.collapsible || _expanded;
-    return Semantics(
+    final menu = Semantics(
       container: true,
       explicitChildNodes: true,
       label: widget.semanticLabel,
@@ -185,9 +192,14 @@ class _WelkMenuState extends State<WelkMenu> {
         ),
       ),
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: menu,
+    );
   }
 
-  Widget _buildToggle(WelkThemeData theme, bool expanded) {
+  Widget _buildToggle(WelkColors theme, bool expanded) {
     final shape = _shape(theme, 8, 5, 10, 6);
     return _MenuAction(
       label: expanded ? 'Collapse menu' : 'Expand menu',
@@ -203,7 +215,7 @@ class _WelkMenuState extends State<WelkMenu> {
       child: CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: theme.ink,
+          color: theme.shadow,
           offset: theme.buttonShadowOffset,
         ),
         child: Container(
@@ -214,7 +226,7 @@ class _WelkMenuState extends State<WelkMenu> {
           child: welkAnimationsDisabled(context)
               ? _MenuGlyph(
                   kind: expanded ? _GlyphKind.close : _GlyphKind.menu,
-                  color: theme.ink,
+                  color: theme.onFill(theme.accent),
                   size: 21,
                 )
               : AnimatedRotation(
@@ -223,7 +235,7 @@ class _WelkMenuState extends State<WelkMenu> {
                   curve: const Cubic(0.2, 1.4, 0.4, 1),
                   child: _MenuGlyph(
                     kind: expanded ? _GlyphKind.close : _GlyphKind.menu,
-                    color: theme.ink,
+                    color: theme.onFill(theme.accent),
                     size: 21,
                   ),
                 ),
@@ -234,7 +246,7 @@ class _WelkMenuState extends State<WelkMenu> {
 
   Widget _buildItems(
     List<WelkMenuItem> items,
-    WelkThemeData theme, {
+    WelkColors theme, {
     int depth = 0,
   }) {
     return Column(
@@ -245,7 +257,7 @@ class _WelkMenuState extends State<WelkMenu> {
           if (index > 0)
             SizedBox(
               height: theme.borderWidth,
-              child: ColoredBox(color: theme.ink),
+              child: ColoredBox(color: theme.outline),
             ),
           _buildItem(items[index], theme, depth),
         ],
@@ -253,7 +265,7 @@ class _WelkMenuState extends State<WelkMenu> {
     );
   }
 
-  Widget _buildItem(WelkMenuItem item, WelkThemeData theme, int depth) {
+  Widget _buildItem(WelkMenuItem item, WelkColors theme, int depth) {
     final branch =
         widget.variant == WelkMenuVariant.nested && item.children.isNotEmpty;
     if (!branch) return _destination(item.title, item.route);
@@ -268,7 +280,7 @@ class _WelkMenuState extends State<WelkMenu> {
           expanded: open,
           focusNode: _branchFocus.putIfAbsent(item.route, FocusNode.new),
           onPressed: () => _toggleBranch(item),
-          child: _row(item.title, theme, down: true),
+          child: _row(item.title, down: true),
         ),
         _MenuReveal(
           visible: open,
@@ -279,7 +291,7 @@ class _WelkMenuState extends State<WelkMenu> {
               painter: depth == 0
                   ? WelkHardShadowPainter(
                       shape: shape,
-                      color: theme.ink,
+                      color: theme.shadow,
                       offset: theme.cardShadowOffset,
                     )
                   : null,
@@ -293,7 +305,7 @@ class _WelkMenuState extends State<WelkMenu> {
                     _destination('Go to ${item.title}', item.route),
                     SizedBox(
                       height: theme.borderWidth,
-                      child: ColoredBox(color: theme.ink),
+                      child: ColoredBox(color: theme.outline),
                     ),
                     _buildItems(item.children, theme, depth: depth + 1),
                   ],
@@ -310,10 +322,10 @@ class _WelkMenuState extends State<WelkMenu> {
     label: title,
     selected: widget.activeRoute == route,
     onPressed: widget.onSelected == null ? null : () => _select(route),
-    child: _row(title, WelkTheme.of(context)),
+    child: _row(title),
   );
 
-  Widget _row(String title, WelkThemeData theme, {bool down = false}) {
+  Widget _row(String title, {bool down = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10.4),
       child: Row(
@@ -322,10 +334,13 @@ class _WelkMenuState extends State<WelkMenu> {
           const SizedBox(width: 10.4),
           Transform.rotate(
             angle: -3 * math.pi / 180,
-            child: _MenuGlyph(
-              kind: down ? _GlyphKind.down : _GlyphKind.arrow,
-              color: theme.ink,
-              rtl: Directionality.of(context) == TextDirection.rtl,
+            // Follows the row's text color, which contrasts with highlights.
+            child: Builder(
+              builder: (context) => _MenuGlyph(
+                kind: down ? _GlyphKind.down : _GlyphKind.arrow,
+                color: DefaultTextStyle.of(context).style.color!,
+                rtl: Directionality.of(context) == TextDirection.rtl,
+              ),
             ),
           ),
         ],
@@ -334,7 +349,7 @@ class _WelkMenuState extends State<WelkMenu> {
   }
 
   WelkShapeBorder _shape(
-    WelkThemeData theme,
+    WelkColors theme,
     double tl,
     double tr,
     double br,
@@ -346,7 +361,7 @@ class _WelkMenuState extends State<WelkMenu> {
       bottomRight: Radius.circular(br),
       bottomLeft: Radius.circular(bl),
     ),
-    strokeColor: theme.ink,
+    strokeColor: theme.outline,
     strokeWidth: theme.borderWidth,
   );
 }
@@ -440,9 +455,10 @@ class _MenuActionState extends State<_MenuAction> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context).resolveColors(context);
     final enabled = widget.onPressed != null;
     final toggle = widget.toggleShape != null;
+    final highlighted = widget.selected || (_hovered && enabled);
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(7),
       topRight: const Radius.circular(4),
@@ -459,9 +475,7 @@ class _MenuActionState extends State<_MenuAction> {
           )
         : DecoratedBox(
             decoration: BoxDecoration(
-              color: widget.selected || (_hovered && enabled)
-                  ? theme.accent
-                  : Colors.transparent,
+              color: highlighted ? theme.accent : Colors.transparent,
               borderRadius: radius,
             ),
             child: DecoratedBox(
@@ -472,7 +486,12 @@ class _MenuActionState extends State<_MenuAction> {
                     ? Border.all(color: theme.focus, width: 3)
                     : null,
               ),
-              child: widget.child,
+              child: DefaultTextStyle.merge(
+                style: TextStyle(
+                  color: highlighted ? theme.onFill(theme.accent) : theme.ink,
+                ),
+                child: widget.child,
+              ),
             ),
           );
     return FocusableActionDetector(

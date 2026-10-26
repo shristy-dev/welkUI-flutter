@@ -22,6 +22,7 @@ class WelkQRCode extends StatefulWidget {
     this.cardColor,
     this.originalCode = false,
     this.size = 192,
+    this.overRideDarkMode,
   }) : assert(size > 0 && size < double.infinity);
 
   final String url;
@@ -31,6 +32,11 @@ class WelkQRCode extends StatefulWidget {
   final Color? cardColor;
   final bool originalCode;
   final double size;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkQRCode> createState() => _WelkQRCodeState();
@@ -71,22 +77,21 @@ class _WelkQRCodeState extends State<WelkQRCode> {
   }
 
   Widget _frame(
-    BuildContext context, {
+    WelkColors theme, {
     required Widget child,
     required EdgeInsets padding,
     required WelkCornerRadii radii,
     Color? color,
   }) {
-    final theme = WelkTheme.of(context);
     final shape = WelkShapeBorder(
       radii: radii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     return CustomPaint(
       painter: WelkHardShadowPainter(
         shape: shape,
-        color: theme.ink,
+        color: theme.shadow,
         offset: theme.cardShadowOffset,
       ),
       child: DecoratedBox(
@@ -101,14 +106,15 @@ class _WelkQRCodeState extends State<WelkQRCode> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final card = widget.variant == WelkQRCodeVariant.card;
     final code = _code;
     final body = code == null
         ? Semantics(
             liveRegion: true,
             child: _frame(
-              context,
+              theme,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               radii: const WelkCornerRadii(
                 topLeft: Radius.circular(4),
@@ -116,14 +122,18 @@ class _WelkQRCodeState extends State<WelkQRCode> {
                 bottomRight: Radius.circular(3),
                 bottomLeft: Radius.circular(6),
               ),
-              child: Text(_error!),
+              // The error sits on paper, even inside a custom card color.
+              child: Text(_error!, style: TextStyle(color: theme.ink)),
             ),
           )
         : Transform.rotate(
             angle: -math.pi / 180,
             child: _frame(
-              context,
+              theme,
               padding: const EdgeInsets.all(8),
+              // Scanners need a light backing in every mode; only the
+              // surrounding surface follows the dark palette.
+              color: theme.data.paper,
               radii: const WelkCornerRadii(
                 topLeft: Radius.circular(5),
                 topRight: Radius.circular(3),
@@ -142,11 +152,12 @@ class _WelkQRCodeState extends State<WelkQRCode> {
               ),
             ),
           );
-    return DefaultTextStyle(
+    final cardColor = widget.cardColor ?? theme.paper;
+    final qrCode = DefaultTextStyle(
       style: TextStyle(
         fontFamily: theme.fontFamily,
         package: theme.fontPackage,
-        color: theme.ink,
+        color: card ? theme.onFill(cardColor) : theme.ink,
         fontSize: 14.4,
         height: 1.4,
       ),
@@ -156,9 +167,9 @@ class _WelkQRCodeState extends State<WelkQRCode> {
             ? Transform.rotate(
                 angle: -math.pi / 180,
                 child: _frame(
-                  context,
+                  theme,
                   padding: const EdgeInsets.all(16),
-                  color: widget.cardColor,
+                  color: cardColor,
                   radii: const WelkCornerRadii(
                     topLeft: Radius.elliptical(12, 8),
                     topRight: Radius.elliptical(7, 14),
@@ -192,6 +203,11 @@ class _WelkQRCodeState extends State<WelkQRCode> {
             : body,
       ),
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: qrCode,
+    );
   }
 }
 
@@ -204,6 +220,7 @@ class _QRCodePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Keep finder/timing patterns square and a four-module white quiet zone.
+    // These raw colors are intentional: dark mode must stay scannable.
     final module = size.shortestSide / (code.moduleCount + 8);
     canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
     final paint = Paint()..color = const Color(0xFF242424);

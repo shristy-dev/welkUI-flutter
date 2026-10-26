@@ -35,6 +35,7 @@ class WelkDropDown extends StatefulWidget {
     this.isRequired = false,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -47,6 +48,11 @@ class WelkDropDown extends StatefulWidget {
   final bool isRequired;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkDropDown> createState() => _WelkDropDownState();
@@ -77,6 +83,7 @@ class _WelkDropDownState extends State<WelkDropDown> {
             oldWidget.searchable != widget.searchable ||
             oldWidget.label != widget.label ||
             oldWidget.isRequired != widget.isRequired ||
+            oldWidget.overRideDarkMode != widget.overRideDarkMode ||
             !_sameOptions(_popupOptions!, widget.options))) {
       _dismissPopup();
     }
@@ -128,14 +135,16 @@ class _WelkDropDownState extends State<WelkDropDown> {
     if (!_enabled || _open) return;
     final box = _anchor.currentContext!.findRenderObject()! as RenderBox;
     final rect = box.localToGlobal(Offset.zero) & box.size;
-    final theme = WelkTheme.of(context);
     final direction = Directionality.of(context);
     final textScaler = MediaQuery.textScalerOf(context);
+    final navigator = Navigator.of(context, rootNavigator: true);
+    // Only themes between the field and the root navigator (local WelkTheme,
+    // Flutter Theme) are captured; providers above it stay live in the popup.
     final inheritedThemes = InheritedTheme.capture(
       from: context,
-      to: Navigator.of(context, rootNavigator: true).context,
+      to: navigator.context,
     );
-    final navigator = Navigator.of(context, rootNavigator: true);
+    final overRideDarkMode = widget.overRideDarkMode;
     final options = List<WelkDropDownOption>.of(widget.options);
     final value = widget.value;
     final label = widget.label;
@@ -152,17 +161,20 @@ class _WelkDropDownState extends State<WelkDropDown> {
       pageBuilder: (context, _, _) => inheritedThemes.wrap(
         MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-          child: WelkTheme(
-            data: theme,
-            child: Directionality(
-              textDirection: direction,
-              child: _SelectPopup(
-                anchor: rect,
-                label: label,
-                options: options,
-                value: value,
-                searchable: searchable,
-                onTraverse: (backwards) => traverseBackwards = backwards,
+          child: Builder(
+            builder: (context) => WelkTheme.scope(
+              context,
+              overRideDarkMode: overRideDarkMode,
+              child: Directionality(
+                textDirection: direction,
+                child: _SelectPopup(
+                  anchor: rect,
+                  label: label,
+                  options: options,
+                  value: value,
+                  searchable: searchable,
+                  onTraverse: (backwards) => traverseBackwards = backwards,
+                ),
               ),
             ),
           ),
@@ -208,7 +220,8 @@ class _WelkDropDownState extends State<WelkDropDown> {
           widget.options.length,
       'Dropdown option values must be unique.',
     );
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final style = TextStyle(
       fontFamily: t.fontFamily,
       package: t.fontPackage,
@@ -223,12 +236,12 @@ class _WelkDropDownState extends State<WelkDropDown> {
         bottomRight: Radius.elliptical(14, 7),
         bottomLeft: Radius.elliptical(8, 12),
       ),
-      strokeColor: t.ink,
+      strokeColor: t.outline,
       strokeWidth: t.borderWidth,
     );
     final matching = widget.options.where((o) => o.value == widget.value);
     final selected = matching.isEmpty ? null : matching.first.label;
-    return ConstrainedBox(
+    final field = ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 320),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -287,7 +300,7 @@ class _WelkDropDownState extends State<WelkDropDown> {
                           key: _anchor,
                           painter: WelkHardShadowPainter(
                             shape: shape,
-                            color: t.ink,
+                            color: t.shadow,
                             offset: const Offset(3, 3),
                           ),
                           child: Container(
@@ -329,6 +342,11 @@ class _WelkDropDownState extends State<WelkDropDown> {
         ],
       ),
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: field,
+    );
   }
 }
 
@@ -358,6 +376,7 @@ class _SelectPopupState extends State<_SelectPopup> {
   final _keys = <String, GlobalKey>{};
   String _query = '';
   String? _active;
+  String? _hovered;
   List<WelkDropDownOption> get _filtered => widget.options
       .where((o) => o.label.toLowerCase().contains(_query.toLowerCase()))
       .toList();
@@ -413,7 +432,7 @@ class _SelectPopupState extends State<_SelectPopup> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context).resolveColors(context);
     final media = MediaQuery.of(context);
     final style = TextStyle(
       fontFamily: t.fontFamily,
@@ -429,7 +448,7 @@ class _SelectPopupState extends State<_SelectPopup> {
         bottomRight: Radius.circular(7),
         bottomLeft: Radius.circular(12),
       ),
-      strokeColor: t.ink,
+      strokeColor: t.outline,
       strokeWidth: t.borderWidth,
     );
     return LayoutBuilder(
@@ -495,7 +514,7 @@ class _SelectPopupState extends State<_SelectPopup> {
                     child: CustomPaint(
                       painter: WelkHardShadowPainter(
                         shape: shape,
-                        color: t.ink,
+                        color: t.shadow,
                         offset: const Offset(3, 3),
                       ),
                       child: Container(
@@ -523,9 +542,18 @@ class _SelectPopupState extends State<_SelectPopup> {
                                     }),
                                     decoration: InputDecoration(
                                       hintText: 'Search ${widget.label}',
+                                      hintStyle: t.isDark
+                                          ? style.copyWith(
+                                              color: t.ink.withValues(
+                                                alpha: 0.65,
+                                              ),
+                                            )
+                                          : null,
                                       contentPadding: const EdgeInsets.all(10),
                                       border: UnderlineInputBorder(
-                                        borderSide: BorderSide(color: t.ink),
+                                        borderSide: BorderSide(
+                                          color: t.outline,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -569,48 +597,62 @@ class _SelectPopupState extends State<_SelectPopup> {
     );
   }
 
-  Widget _option(WelkDropDownOption option, TextStyle style, WelkThemeData t) {
+  Widget _option(WelkDropDownOption option, TextStyle style, WelkColors t) {
     final selected = option.value == widget.value;
+    final fill = _active == option.value
+        ? t.accentHover
+        : selected
+        ? t.accent
+        : _hovered == option.value && !option.disabled
+        ? t.accentHover
+        : null;
     return Semantics(
       key: _keys.putIfAbsent(option.value, GlobalKey.new),
       selected: selected,
       enabled: !option.disabled,
       child: Opacity(
         opacity: option.disabled ? 0.5 : 1,
-        child: InkWell(
-          canRequestFocus: false,
-          onTap: option.disabled
-              ? null
-              : () => Navigator.of(context).pop(option.value),
-          hoverColor: t.accentHover,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(7),
-            topRight: Radius.circular(10),
-            bottomRight: Radius.circular(5),
-            bottomLeft: Radius.circular(8),
-          ),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: _active == option.value
-                  ? t.accentHover
-                  : selected
-                  ? t.accent
-                  : Colors.transparent,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(7),
-                topRight: Radius.circular(10),
-                bottomRight: Radius.circular(5),
-                bottomLeft: Radius.circular(8),
-              ),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _hovered = option.value),
+          onExit: (_) {
+            if (_hovered == option.value) setState(() => _hovered = null);
+          },
+          child: InkWell(
+            canRequestFocus: false,
+            onTap: option.disabled
+                ? null
+                : () => Navigator.of(context).pop(option.value),
+            hoverColor: t.accentHover,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(7),
+              topRight: Radius.circular(10),
+              bottomRight: Radius.circular(5),
+              bottomLeft: Radius.circular(8),
             ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.all(10.4),
-                child: Text(
-                  option.label,
-                  style: style.copyWith(
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: _active == option.value
+                    ? t.accentHover
+                    : selected
+                    ? t.accent
+                    : Colors.transparent,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(7),
+                  topRight: Radius.circular(10),
+                  bottomRight: Radius.circular(5),
+                  bottomLeft: Radius.circular(8),
+                ),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.all(10.4),
+                  child: Text(
+                    option.label,
+                    style: style.copyWith(
+                      color: fill == null ? t.ink : t.onFill(fill),
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                    ),
                   ),
                 ),
               ),

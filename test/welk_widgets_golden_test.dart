@@ -6,47 +6,61 @@ import 'package:welkui_flutter/welkui_flutter.dart';
 import 'support/rasterization_golden_comparator.dart';
 
 void main() {
-  testWidgets('captures the WelkUI widget appearance with the bundled font', (
-    tester,
-  ) async {
-    final originalComparator = goldenFileComparator;
-    if (originalComparator is LocalFileComparator) {
-      // macOS CI differs on 118 text-edge pixels (maximum channel delta 14).
-      goldenFileComparator = RasterizationGoldenComparator(
-        originalComparator.basedir.resolve('welk_widgets_golden_test.dart'),
+  for (final darkMode in [false, true]) {
+    testWidgets('captures the WelkUI widget appearance (dark=$darkMode)', (
+      tester,
+    ) async {
+      final originalComparator = goldenFileComparator;
+      if (originalComparator is LocalFileComparator) {
+        // macOS CI differs on 118 text-edge pixels (maximum channel delta 14).
+        goldenFileComparator = RasterizationGoldenComparator(
+          originalComparator.basedir.resolve('welk_widgets_golden_test.dart'),
+        );
+        addTearDown(() => goldenFileComparator = originalComparator);
+      }
+      tester.view.physicalSize = const Size(440, 620);
+      tester.view.devicePixelRatio = 1;
+      final fontData = await rootBundle.load(
+        'packages/welkui_flutter/assets/font/short_stack/ShortStack-Regular.ttf',
       );
-      addTearDown(() => goldenFileComparator = originalComparator);
-    }
-    tester.view.physicalSize = const Size(440, 620);
-    tester.view.devicePixelRatio = 1;
-    final fontData = await rootBundle.load(
-      'packages/welkui_flutter/assets/font/short_stack/ShortStack-Regular.ttf',
-    );
-    await (FontLoader(
-      'packages/welkui_flutter/ShortStack',
-    )..addFont(Future.value(fontData))).load();
+      await (FontLoader(
+        'packages/welkui_flutter/ShortStack',
+      )..addFont(Future.value(fontData))).load();
 
-    await tester.pumpWidget(
-      const WelkTheme(
-        data: WelkThemeData(),
-        child: MaterialApp(
-          home: Scaffold(
-            backgroundColor: Color(0xFFFFFDF5),
-            body: Padding(padding: EdgeInsets.all(24), child: _GoldenGallery()),
+      await tester.pumpWidget(
+        WelkTheme(
+          data: WelkThemeData(darkMode: darkMode),
+          child: MaterialApp(
+            theme: ThemeData(
+              brightness: darkMode ? Brightness.dark : Brightness.light,
+            ),
+            home: Scaffold(
+              backgroundColor: darkMode
+                  ? const WelkThemeData().darkPaper
+                  : const Color(0xFFFFFDF5),
+              body: const Padding(
+                padding: EdgeInsets.all(24),
+                child: _GoldenGallery(),
+              ),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    await expectLater(
-      find.byType(_GoldenGallery),
-      matchesGoldenFile('goldens/welk_widgets.png'),
-    );
+      await expectLater(
+        find.byType(_GoldenGallery),
+        matchesGoldenFile(
+          darkMode
+              ? 'goldens/welk_widgets_dark.png'
+              : 'goldens/welk_widgets.png',
+        ),
+      );
 
-    tester.view.resetPhysicalSize();
-    tester.view.resetDevicePixelRatio();
-  });
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+  }
 
   testWidgets('captures menu reference variants with the bundled font', (
     tester,

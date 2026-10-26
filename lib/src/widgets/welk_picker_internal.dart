@@ -21,7 +21,7 @@ WelkCornerRadii pickerCircularRadii(double a, double b, double c, double d) =>
     );
 
 TextStyle pickerTextStyle(BuildContext context, {double size = 16}) {
-  final theme = WelkTheme.of(context);
+  final theme = WelkTheme.of(context).resolveColors(context);
   return TextStyle(
     color: theme.ink,
     fontFamily: theme.fontFamily,
@@ -41,6 +41,7 @@ class PickerSurface extends StatelessWidget {
     this.shadowOffset,
     this.padding = EdgeInsets.zero,
     this.outlined = true,
+    this.overRideDarkMode,
   });
 
   final Widget child;
@@ -50,27 +51,45 @@ class PickerSurface extends StatelessWidget {
   final Offset? shadowOffset;
   final EdgeInsetsGeometry padding;
   final bool outlined;
+  final bool? overRideDarkMode;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
+    final foreground = theme.isDark && color != null
+        ? theme.onFill(color!)
+        : theme.ink;
     final shape = WelkShapeBorder(
       radii: radii,
-      strokeColor: outlined ? theme.ink : Colors.transparent,
+      strokeColor: outlined ? theme.outline : Colors.transparent,
       strokeWidth: theme.borderWidth,
     );
     return CustomPaint(
       painter: shadow
           ? WelkHardShadowPainter(
               shape: shape,
-              color: theme.ink,
+              color: theme.shadow,
               offset: shadowOffset ?? theme.cardShadowOffset,
             )
           : null,
       child: Container(
         decoration: ShapeDecoration(color: color ?? theme.paper, shape: shape),
         padding: padding,
-        child: DefaultTextStyle(style: pickerTextStyle(context), child: child),
+        child: DefaultTextStyle(
+          style: pickerTextStyle(context).copyWith(color: foreground),
+          child: theme.isDark
+              ? IconTheme.merge(
+                  data: IconThemeData(color: foreground),
+                  child: child,
+                )
+              : child,
+        ),
       ),
     );
   }
@@ -95,6 +114,7 @@ class PickerButton extends StatefulWidget {
     this.disabledOpacity = 0.45,
     this.minimumSize = const Size(48, 48),
     this.visualSize,
+    this.overRideDarkMode,
   });
 
   final Widget child;
@@ -112,6 +132,7 @@ class PickerButton extends StatefulWidget {
   final double disabledOpacity;
   final Size minimumSize;
   final Size? visualSize;
+  final bool? overRideDarkMode;
 
   @override
   State<PickerButton> createState() => _PickerButtonState();
@@ -132,13 +153,19 @@ class _PickerButtonState extends State<PickerButton> {
         );
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
     final enabled = widget.onPressed != null;
     final radii = widget.radii ?? pickerCircularRadii(8, 5, 9, 6);
     final shape = WelkShapeBorder(
       radii: radii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     return Focus(
@@ -234,6 +261,7 @@ class PickerEditor extends StatefulWidget {
     this.autofocus = false,
     this.helperText,
     this.timeStyle = false,
+    this.overRideDarkMode,
   });
 
   final TextEditingController controller;
@@ -247,6 +275,7 @@ class PickerEditor extends StatefulWidget {
   final bool autofocus;
   final String? helperText;
   final bool timeStyle;
+  final bool? overRideDarkMode;
 
   @override
   State<PickerEditor> createState() => _PickerEditorState();
@@ -256,8 +285,14 @@ class _PickerEditorState extends State<PickerEditor> {
   bool _focused = false;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
     final radii = pickerCircularRadii(8, 12, 7, 10);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -357,7 +392,10 @@ class _PickerEditorState extends State<PickerEditor> {
               padding: EdgeInsets.all(widget.timeStyle ? 8 : 6.4),
               child: Text(
                 widget.error!,
-                style: pickerTextStyle(context, size: 12),
+                style: pickerTextStyle(
+                  context,
+                  size: 12,
+                ).copyWith(color: theme.onFill(theme.error)),
               ),
             ),
           ),

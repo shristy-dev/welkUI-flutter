@@ -26,6 +26,7 @@ class WelkImage extends StatefulWidget {
     this.alignment = Alignment.center,
     this.semanticLabel,
     this.excludeFromSemantics = false,
+    this.overRideDarkMode,
   }) : _network = true,
        package = null;
 
@@ -39,6 +40,7 @@ class WelkImage extends StatefulWidget {
     this.alignment = Alignment.center,
     this.semanticLabel,
     this.excludeFromSemantics = false,
+    this.overRideDarkMode,
   }) : _network = false,
        fallbackAsset = null,
        fallbackPackage = null;
@@ -55,6 +57,11 @@ class WelkImage extends StatefulWidget {
   final AlignmentGeometry alignment;
   final String? semanticLabel;
   final bool excludeFromSemantics;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
   final bool _network;
 
   @override
@@ -92,10 +99,11 @@ class _WelkImageState extends State<WelkImage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final shape = WelkShapeBorder(
       radii: welkCardRadii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     final image = widget._network
@@ -129,7 +137,7 @@ class _WelkImageState extends State<WelkImage> {
           child: CustomPaint(
             painter: WelkHardShadowPainter(
               shape: shape,
-              color: theme.ink,
+              color: theme.shadow,
               offset: theme.cardShadowOffset,
             ),
             child: DecoratedBox(

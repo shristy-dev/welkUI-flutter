@@ -34,6 +34,7 @@ class WelkTabs extends StatefulWidget {
     this.onValueChange,
     this.variant = WelkTabsVariant.defaultStyle,
     this.orientation = Axis.horizontal,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -43,6 +44,11 @@ class WelkTabs extends StatefulWidget {
   final ValueChanged<String>? onValueChange;
   final WelkTabsVariant variant;
   final Axis orientation;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkTabs> createState() => _WelkTabsState();
@@ -134,7 +140,7 @@ class _WelkTabsState extends State<WelkTabs> {
           widget.items.length,
       'Tab values must be unique.',
     );
-    final theme = WelkTheme.of(context);
+    final theme = _colors(context);
     final active = _activeIndex;
     final withBg = widget.variant == WelkTabsVariant.withBg;
     final panelShape = WelkShapeBorder(
@@ -144,10 +150,10 @@ class _WelkTabsState extends State<WelkTabs> {
         bottomRight: Radius.circular(15),
         bottomLeft: Radius.circular(9),
       ),
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
-    return DefaultTextStyle.merge(
+    final tabs = DefaultTextStyle.merge(
       style: TextStyle(
         fontFamily: theme.fontFamily,
         package: theme.fontPackage,
@@ -213,7 +219,14 @@ class _WelkTabsState extends State<WelkTabs> {
                                   excluding: i != active,
                                   child: TickerMode(
                                     enabled: i == active,
-                                    child: widget.items[i].content,
+                                    child: theme.isDark
+                                        ? IconTheme.merge(
+                                            data: IconThemeData(
+                                              color: theme.ink,
+                                            ),
+                                            child: widget.items[i].content,
+                                          )
+                                        : widget.items[i].content,
                                   ),
                                 ),
                               ),
@@ -244,7 +257,16 @@ class _WelkTabsState extends State<WelkTabs> {
         },
       ),
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: tabs,
+    );
   }
+
+  WelkColors _colors(BuildContext context) =>
+      WelkTheme.of(context)
+          .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
 
   Widget _tab(
     BuildContext context,
@@ -253,9 +275,21 @@ class _WelkTabsState extends State<WelkTabs> {
     bool withBg,
     bool vertical,
   ) {
-    final theme = WelkTheme.of(context);
+    final theme = _colors(context);
     final item = widget.items[index];
     final selected = index == active;
+    final hovered = _hover == item.value && !item.disabled;
+    final color = selected
+        ? theme.accent
+        : hovered
+        ? theme.muted
+        : withBg
+        ? const Color(0x00000000)
+        : theme.paper;
+    // Transparent tabs sit on the muted tab-list background.
+    final foreground = theme.onFill(
+      color == const Color(0x00000000) ? theme.muted : color,
+    );
     final node = _nodes.putIfAbsent(
       item.value,
       () => FocusNode(debugLabel: 'WelkTabs ${item.value}'),
@@ -275,7 +309,9 @@ class _WelkTabsState extends State<WelkTabs> {
               bottomRight: Radius.circular(9),
               bottomLeft: Radius.circular(5),
             ),
-      strokeColor: withBg && !selected ? const Color(0x00000000) : theme.ink,
+      strokeColor: withBg && !selected
+          ? const Color(0x00000000)
+          : theme.outline,
       strokeWidth: theme.borderWidth,
     );
     return Opacity(
@@ -320,7 +356,7 @@ class _WelkTabsState extends State<WelkTabs> {
                   painter: withBg && selected
                       ? WelkHardShadowPainter(
                           shape: shape,
-                          color: theme.ink,
+                          color: theme.shadow,
                           offset: theme.buttonShadowOffset,
                         )
                       : null,
@@ -333,19 +369,20 @@ class _WelkTabsState extends State<WelkTabs> {
                       horizontal: 16 + theme.borderWidth,
                       vertical: 8.8 + theme.borderWidth,
                     ),
-                    decoration: ShapeDecoration(
-                      shape: shape,
-                      color: selected
-                          ? theme.accent
-                          : _hover == item.value && !item.disabled
-                          ? theme.muted
-                          : withBg
-                          ? const Color(0x00000000)
-                          : theme.paper,
-                    ),
+                    decoration: ShapeDecoration(shape: shape, color: color),
                     child: DefaultTextStyle.merge(
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                      child: item.label,
+                      style: theme.isDark
+                          ? TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: foreground,
+                            )
+                          : const TextStyle(fontWeight: FontWeight.w700),
+                      child: theme.isDark
+                          ? IconTheme.merge(
+                              data: IconThemeData(color: foreground),
+                              child: item.label,
+                            )
+                          : item.label,
                     ),
                   ),
                 ),

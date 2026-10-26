@@ -22,6 +22,7 @@ class WelkStickerCard extends StatefulWidget {
     this.outlineColor = const Color(0xFFFFFFFF),
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final String title;
@@ -37,6 +38,11 @@ class WelkStickerCard extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
 
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
+
   @override
   State<WelkStickerCard> createState() => _WelkStickerCardState();
 }
@@ -45,95 +51,103 @@ class _WelkStickerCardState extends State<WelkStickerCard> {
   bool _hover = false;
 
   @override
-  Widget build(BuildContext context) => MouseRegion(
-    onEnter: (_) => setState(() => _hover = true),
-    onExit: (_) => setState(() => _hover = false),
-    child: AnimatedScale(
-      scale:
-          _hover &&
-              widget.growOnHover &&
-              widget.enabled &&
-              !welkAnimationsDisabled(context)
-          ? 1.03
-          : 1,
-      duration: welkAnimationsDisabled(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 120),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 400;
-          final stacked =
-              constraints.maxWidth < 280 ||
-              MediaQuery.textScalerOf(context).scale(1) > 1.5;
-          final artWidth = compact ? 128.0 : 176.0;
-          final art = ExcludeSemantics(
-            child: IgnorePointer(
-              child: Opacity(
-                opacity: widget.enabled ? 1 : .55,
-                child: WelkSticker(
-                  image: widget.sticker,
-                  fallbackImage: widget.fallbackImage,
-                  alt: '',
-                  width: artWidth,
-                  height: artWidth,
-                  outlineThickness: widget.outlineThickness,
-                  outlineColor: widget.outlineColor,
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedScale(
+        scale:
+            _hover &&
+                widget.growOnHover &&
+                widget.enabled &&
+                !welkAnimationsDisabled(context)
+            ? 1.03
+            : 1,
+        duration: welkAnimationsDisabled(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 120),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 400;
+            final stacked =
+                constraints.maxWidth < 280 ||
+                MediaQuery.textScalerOf(context).scale(1) > 1.5;
+            final artWidth = compact ? 128.0 : 176.0;
+            final art = ExcludeSemantics(
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: widget.enabled ? 1 : .55,
+                  child: WelkSticker(
+                    image: widget.sticker,
+                    fallbackImage: widget.fallbackImage,
+                    alt: '',
+                    width: artWidth,
+                    height: artWidth,
+                    outlineThickness: widget.outlineThickness,
+                    outlineColor: widget.outlineColor,
+                    overRideDarkMode: widget.overRideDarkMode,
+                  ),
                 ),
               ),
-            ),
-          );
-          final card = WelkCard(
-            title: widget.title,
-            subtitle: widget.subtitle,
-            icon: widget.icon,
-            onPressed: widget.onPressed,
-            enabled: widget.enabled,
-            focusNode: widget.focusNode,
-            autofocus: widget.autofocus,
-          );
-          if (stacked) {
+            );
+            final card = WelkCard(
+              title: widget.title,
+              subtitle: widget.subtitle,
+              icon: widget.icon,
+              onPressed: widget.onPressed,
+              enabled: widget.enabled,
+              focusNode: widget.focusNode,
+              autofocus: widget.autofocus,
+              overRideDarkMode: widget.overRideDarkMode,
+            );
+            if (stacked) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: art,
+                    ),
+                    Opacity(
+                      opacity: !widget.enabled && widget.onPressed == null
+                          ? .55
+                          : 1,
+                      child: card,
+                    ),
+                  ],
+                ),
+              );
+            }
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: art,
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(
+                      start: compact ? 32 : 48,
+                    ),
+                    child: _StickerCardSurface(
+                      widget: widget,
+                      leading: compact ? 96 : 128,
+                    ),
                   ),
-                  Opacity(
-                    opacity: !widget.enabled && widget.onPressed == null
-                        ? .55
-                        : 1,
-                    child: card,
+                  PositionedDirectional(
+                    start: 0,
+                    top: -28,
+                    bottom: -28,
+                    width: artWidth,
+                    child: Center(child: art),
                   ),
                 ],
               ),
             );
-          }
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Padding(
-                  padding: EdgeInsetsDirectional.only(start: compact ? 32 : 48),
-                  child: _StickerCardSurface(
-                    widget: widget,
-                    leading: compact ? 96 : 128,
-                  ),
-                ),
-                PositionedDirectional(
-                  start: 0,
-                  top: -28,
-                  bottom: -28,
-                  width: artWidth,
-                  child: Center(child: art),
-                ),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     ),
   );
@@ -154,11 +168,12 @@ class _StickerCardSurfaceState extends State<_StickerCardSurface> {
   @override
   Widget build(BuildContext context) {
     final card = widget.widget;
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: card.overRideDarkMode);
     final enabled = card.enabled && card.onPressed != null;
     final shape = WelkShapeBorder(
       radii: welkCardRadii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
     final surface = Opacity(
@@ -171,7 +186,7 @@ class _StickerCardSurfaceState extends State<_StickerCardSurface> {
         child: CustomPaint(
           painter: WelkHardShadowPainter(
             shape: shape,
-            color: theme.ink,
+            color: theme.shadow,
             offset: theme.cardShadowOffset,
           ),
           child: Container(
@@ -219,7 +234,14 @@ class _StickerCardSurfaceState extends State<_StickerCardSurface> {
                       top: 0,
                       width: 24,
                       height: 24,
-                      child: ExcludeSemantics(child: card.icon!),
+                      child: ExcludeSemantics(
+                        child: theme.isDark
+                            ? IconTheme.merge(
+                                data: IconThemeData(color: theme.ink),
+                                child: card.icon!,
+                              )
+                            : card.icon!,
+                      ),
                     ),
                 ],
               ),

@@ -21,6 +21,7 @@ class WelkAccordion extends StatefulWidget {
     this.fixedWidth,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   }) : assert(
          fixedWidth == null || (fixedWidth > 0 && fixedWidth < double.infinity),
        );
@@ -36,6 +37,11 @@ class WelkAccordion extends StatefulWidget {
   final double? fixedWidth;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkAccordion> createState() => _WelkAccordionState();
@@ -54,7 +60,9 @@ class _WelkAccordionState extends State<WelkAccordion> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
+    final headerColor = _open ? theme.accent : theme.paper;
     final shape = WelkShapeBorder(
       radii: const WelkCornerRadii(
         topLeft: Radius.circular(10.4),
@@ -62,10 +70,10 @@ class _WelkAccordionState extends State<WelkAccordion> {
         bottomRight: Radius.circular(10.4),
         bottomLeft: Radius.circular(10.4),
       ),
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
-    return TapRegion(
+    final accordion = TapRegion(
       onTapOutside: widget.closeOnOutsideClick && _open
           ? (_) => _change(false)
           : null,
@@ -86,7 +94,7 @@ class _WelkAccordionState extends State<WelkAccordion> {
                   ? null
                   : WelkHardShadowPainter(
                       shape: shape,
-                      color: theme.ink,
+                      color: theme.shadow,
                       offset: theme.cardShadowOffset,
                     ),
               child: DecoratedBox(
@@ -136,32 +144,37 @@ class _WelkAccordionState extends State<WelkAccordion> {
                                 ),
                                 padding: const EdgeInsets.all(16),
                                 decoration: ShapeDecoration(
-                                  color: _open ? theme.accent : theme.paper,
+                                  color: headerColor,
                                   shape: shape,
                                 ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    ExcludeSemantics(
-                                      child: Text(
-                                        _open
-                                            ? '▾'
-                                            : Directionality.of(context) ==
-                                                  TextDirection.rtl
-                                            ? '◂'
-                                            : '▸',
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: DefaultTextStyle.merge(
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
+                                child: _foreground(
+                                  theme,
+                                  theme.onFill(headerColor),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ExcludeSemantics(
+                                        child: Text(
+                                          _open
+                                              ? '▾'
+                                              : Directionality.of(context) ==
+                                                    TextDirection.rtl
+                                              ? '◂'
+                                              : '▸',
                                         ),
-                                        child: widget.title,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: DefaultTextStyle.merge(
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          child: widget.title,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -192,20 +205,24 @@ class _WelkAccordionState extends State<WelkAccordion> {
                                     border: horizontal
                                         ? BorderDirectional(
                                             start: BorderSide(
-                                              color: theme.ink,
+                                              color: theme.outline,
                                               width: theme.borderWidth,
                                             ),
                                           )
                                         : Border(
                                             top: BorderSide(
-                                              color: theme.ink,
+                                              color: theme.outline,
                                               width: theme.borderWidth,
                                             ),
                                           ),
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(16),
-                                    child: widget.child,
+                                    child: _foreground(
+                                      theme,
+                                      theme.ink,
+                                      widget.child,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -217,7 +234,7 @@ class _WelkAccordionState extends State<WelkAccordion> {
                         content = DecoratedBox(
                           decoration: BoxDecoration(
                             border: BorderDirectional(
-                              start: BorderSide(color: theme.ink, width: 2),
+                              start: BorderSide(color: theme.outline, width: 2),
                             ),
                           ),
                           child: content,
@@ -236,6 +253,23 @@ class _WelkAccordionState extends State<WelkAccordion> {
             ),
           ),
         ),
+      ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: accordion,
+    );
+  }
+
+  /// Dark surfaces also need readable icons; light mode keeps ambient icons.
+  Widget _foreground(WelkColors theme, Color color, Widget child) {
+    if (!theme.isDark) return child;
+    return IconTheme.merge(
+      data: IconThemeData(color: color),
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: color),
+        child: child,
       ),
     );
   }

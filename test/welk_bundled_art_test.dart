@@ -9,6 +9,14 @@ void main() {
     (tester) async {
       await tester.runAsync(() async {
         for (final path in [
+          'icons/person/male_user.png',
+          'icons/person/female_user.png',
+          'icons/person/male_admin.png',
+          'icons/person/female_admin.png',
+          'icons/person/male_user_white.png',
+          'icons/person/female_user_white.png',
+          'icons/person/male_admin_white.png',
+          'icons/person/female_admin_white.png',
           'portraits/male_user.png',
           'portraits/female_user.png',
           'portraits/male_admin.png',

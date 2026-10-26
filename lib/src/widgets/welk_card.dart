@@ -17,6 +17,7 @@ class WelkCard extends StatefulWidget {
     this.enableFeedback = true,
     this.focusNode,
     this.autofocus = false,
+    this.overRideDarkMode,
   });
 
   final String title;
@@ -37,6 +38,11 @@ class WelkCard extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
 
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
+
   @override
   State<WelkCard> createState() => _WelkCardState();
 }
@@ -56,7 +62,8 @@ class _WelkCardState extends State<WelkCard> with WelkTapFeedback<WelkCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+    final theme = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final interactive = widget.onPressed != null;
     final enabled = interactive && widget.enabled;
     final pressed = feedbackEnabled && feedbackPressed;
@@ -65,7 +72,7 @@ class _WelkCardState extends State<WelkCard> with WelkTapFeedback<WelkCard> {
         : WelkTapFeedback.transitionDuration;
     final shape = WelkShapeBorder(
       radii: welkCardRadii,
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: theme.borderWidth,
     );
 
@@ -78,7 +85,7 @@ class _WelkCardState extends State<WelkCard> with WelkTapFeedback<WelkCard> {
       builder: (context, shadowOffset, child) => CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: theme.ink,
+          color: theme.shadow,
           offset: shadowOffset,
         ),
         child: child,
@@ -131,7 +138,14 @@ class _WelkCardState extends State<WelkCard> with WelkTapFeedback<WelkCard> {
                 end: -44,
                 width: 24,
                 height: 24,
-                child: ExcludeSemantics(child: widget.icon!),
+                child: ExcludeSemantics(
+                  child: theme.isDark
+                      ? IconTheme.merge(
+                          data: IconThemeData(color: theme.ink),
+                          child: widget.icon!,
+                        )
+                      : widget.icon!,
+                ),
               ),
           ],
         ),
@@ -146,9 +160,15 @@ class _WelkCardState extends State<WelkCard> with WelkTapFeedback<WelkCard> {
       child: content,
     );
 
-    if (!interactive) return shapedContent;
+    if (!interactive) {
+      return WelkTheme.scope(
+        context,
+        overRideDarkMode: widget.overRideDarkMode,
+        child: shapedContent,
+      );
+    }
 
-    return Opacity(
+    final card = Opacity(
       opacity: enabled ? 1 : 0.55,
       child: FocusableActionDetector(
         enabled: enabled,
@@ -192,6 +212,11 @@ class _WelkCardState extends State<WelkCard> with WelkTapFeedback<WelkCard> {
           ),
         ),
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: card,
     );
   }
 }

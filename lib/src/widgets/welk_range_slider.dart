@@ -21,6 +21,7 @@ class WelkRangeSlider extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.semanticFormatter,
+    this.overRideDarkMode,
   }) : assert(min < max),
        assert(step > 0),
        assert(value >= min && value <= max);
@@ -35,6 +36,11 @@ class WelkRangeSlider extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final String Function(double)? semanticFormatter;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkRangeSlider> createState() => _WelkRangeSliderState();
@@ -91,7 +97,8 @@ class _WelkRangeSliderState extends State<WelkRangeSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final focusShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10.4),
@@ -99,7 +106,7 @@ class _WelkRangeSliderState extends State<WelkRangeSlider> {
     final valueLabel =
         widget.semanticFormatter?.call(widget.value) ??
         '${widget.value == widget.value.roundToDouble() ? widget.value.toInt() : widget.value}';
-    return Column(
+    final slider = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -194,7 +201,7 @@ class _WelkRangeSliderState extends State<WelkRangeSlider> {
                         bottomRight: Radius.elliptical(width * .40, 2.4),
                         bottomLeft: Radius.elliptical(width * .15, 4.8),
                       ),
-                      strokeColor: t.ink,
+                      strokeColor: t.outline,
                       strokeWidth: t.borderWidth,
                     );
                     void seek(Offset local) {
@@ -247,7 +254,7 @@ class _WelkRangeSliderState extends State<WelkRangeSlider> {
                                 child: CustomPaint(
                                   painter: WelkHardShadowPainter(
                                     shape: track,
-                                    color: t.ink,
+                                    color: t.shadow,
                                     offset: const Offset(1, 2),
                                   ),
                                   child: DecoratedBox(
@@ -279,9 +286,14 @@ class _WelkRangeSliderState extends State<WelkRangeSlider> {
         ),
       ],
     );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: slider,
+    );
   }
 
-  Widget _thumb(WelkThemeData t) {
+  Widget _thumb(WelkColors t) {
     final shape = WelkShapeBorder(
       radii: const WelkCornerRadii(
         topLeft: Radius.elliptical(10.8, 13.2),
@@ -289,13 +301,13 @@ class _WelkRangeSliderState extends State<WelkRangeSlider> {
         bottomRight: Radius.elliptical(10.08, 13.92),
         bottomLeft: Radius.elliptical(13.92, 10.8),
       ),
-      strokeColor: t.ink,
+      strokeColor: t.outline,
       strokeWidth: t.borderWidth,
     );
     return CustomPaint(
       painter: WelkHardShadowPainter(
         shape: shape,
-        color: t.ink,
+        color: t.shadow,
         offset: const Offset(2, 2),
       ),
       child: Container(

@@ -6,6 +6,7 @@ class WelkThemeData {
   const WelkThemeData({
     this.darkMode,
     this.darkPaper = const Color(0xFF303030),
+    this.darkMuted = const Color(0xFF424242),
     this.darkInk = const Color(0xFFF5F5F5),
     this.darkOutline = const Color(0xFF000000),
     this.darkShadow = const Color(0xFFBDBDBD),
@@ -34,12 +35,13 @@ class WelkThemeData {
     this.switchShadowOffset = const Offset(2, 2),
   });
 
-  /// Global dark-mode preference for supported widgets (currently `WelkButton`).
+  /// Global dark-mode preference for WelkUI widgets.
   ///
   /// Null follows Flutter's [ThemeData.brightness]. A widget's
   /// `overRideDarkMode` takes precedence over this preference.
   final bool? darkMode;
   final Color darkPaper;
+  final Color darkMuted;
   final Color darkInk;
   final Color darkOutline;
   final Color darkShadow;
@@ -72,6 +74,7 @@ class WelkThemeData {
   WelkThemeData copyWith({
     bool? darkMode,
     Color? darkPaper,
+    Color? darkMuted,
     Color? darkInk,
     Color? darkOutline,
     Color? darkShadow,
@@ -102,6 +105,7 @@ class WelkThemeData {
     return WelkThemeData(
       darkMode: darkMode ?? this.darkMode,
       darkPaper: darkPaper ?? this.darkPaper,
+      darkMuted: darkMuted ?? this.darkMuted,
       darkInk: darkInk ?? this.darkInk,
       darkOutline: darkOutline ?? this.darkOutline,
       darkShadow: darkShadow ?? this.darkShadow,
@@ -136,6 +140,71 @@ class WelkThemeData {
       overRideDarkMode ??
       darkMode ??
       Theme.of(context).brightness == Brightness.dark;
+
+  /// Resolves the palette without changing the underlying design tokens.
+  WelkColors resolveColors(BuildContext context, {bool? overRideDarkMode}) =>
+      WelkColors(
+        this,
+        isDark: resolveDarkMode(context, overRideDarkMode: overRideDarkMode),
+      );
+}
+
+/// Semantic colors shared by WelkUI surfaces, controls, and overlays.
+@immutable
+class WelkColors {
+  const WelkColors(this.data, {required this.isDark});
+
+  final WelkThemeData data;
+  final bool isDark;
+
+  Color get paper => isDark ? data.darkPaper : data.paper;
+  Color get white => isDark ? data.darkPaper : data.white;
+  Color get muted => isDark ? data.darkMuted : data.muted;
+  Color get ink => isDark ? data.darkInk : data.ink;
+  Color get outline => isDark ? data.darkOutline : data.ink;
+  Color get shadow => isDark ? data.darkShadow : data.ink;
+  Color get focus => isDark ? data.darkFocus : data.focus;
+  Color get accent => fill(data.accent);
+  Color get accentHover => fill(data.accentHover);
+  Color get error => fill(data.error);
+  Color get errorHover => fill(data.errorHover);
+  Color get warning => fill(data.warning);
+  Color get warningHover => fill(data.warningHover);
+  Color get info => fill(data.info);
+  Color get infoHover => fill(data.infoHover);
+  Color get success => fill(data.success);
+  Color get successHover => fill(data.successHover);
+  String get fontFamily => data.fontFamily;
+  String? get fontPackage => data.fontPackage;
+  double get borderWidth => data.borderWidth;
+  Offset get buttonShadowOffset => data.buttonShadowOffset;
+  Offset get cardShadowOffset => data.cardShadowOffset;
+  Offset get switchShadowOffset => data.switchShadowOffset;
+
+  Color fill(Color color) =>
+      isDark ? Color.alphaBlend(data.darkButtonTint, color) : color;
+
+  /// Keeps semantic fills readable without altering light-mode custom themes.
+  Color onFill(Color color) {
+    if (!isDark) return data.ink;
+    const dark = Color(0xFF242424);
+    final background = color.computeLuminance();
+    double contrast(Color foreground) {
+      final luminance = foreground.computeLuminance();
+      return luminance > background
+          ? (luminance + 0.05) / (background + 0.05)
+          : (background + 0.05) / (luminance + 0.05);
+    }
+
+    final foreground = contrast(data.darkInk) >= contrast(dark)
+        ? data.darkInk
+        : dark;
+    if (contrast(foreground) >= 4.5) return foreground;
+    // Mid-tone fills can need pure black or white to meet text contrast.
+    return contrast(Colors.white) >= contrast(Colors.black)
+        ? Colors.white
+        : Colors.black;
+  }
 }
 
 /// Provides WelkUI design tokens to the widgets below it in the tree.
@@ -148,6 +217,18 @@ class WelkTheme extends InheritedTheme {
     return context.dependOnInheritedWidgetOfExactType<WelkTheme>()?.data ??
         const WelkThemeData();
   }
+
+  /// Carries a local override into composed widgets and user-supplied children.
+  static Widget scope(
+    BuildContext context, {
+    required bool? overRideDarkMode,
+    required Widget child,
+  }) => overRideDarkMode == null
+      ? child
+      : WelkTheme(
+          data: of(context).copyWith(darkMode: overRideDarkMode),
+          child: child,
+        );
 
   @override
   bool updateShouldNotify(WelkTheme oldWidget) => data != oldWidget.data;

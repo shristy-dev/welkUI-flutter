@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
+import '../painting/welk_focus_ring.dart';
 import '../painting/welk_shape_border.dart';
 import '../theme/welk_theme.dart';
 
@@ -45,6 +46,7 @@ class WelkInput extends StatefulWidget {
     this.textInputAction,
     this.autofillHints,
     this.inputFormatters,
+    this.overRideDarkMode,
   });
 
   final String label;
@@ -64,6 +66,11 @@ class WelkInput extends StatefulWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final List<TextInputFormatter>? inputFormatters;
+
+  /// Overrides [WelkThemeData.darkMode] for this widget.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkInput> createState() => _WelkInputState();
@@ -127,13 +134,19 @@ class _WelkInputState extends State<WelkInput> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context)
+        .resolveColors(context, overRideDarkMode: widget.overRideDarkMode);
     final error = widget.invalid || widget.errorText != null;
     final readOnly = widget.readOnly || widget.onChanged == null;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10.4),
       side: BorderSide(
-        color: error ? t.errorHover : (_node.hasFocus ? t.focus : t.ink),
+        // Dark keeps the black outline; focus moves to a separate ring.
+        color: t.isDark
+            ? t.outline
+            : error
+            ? t.errorHover
+            : (_node.hasFocus ? t.focus : t.ink),
         width: _node.hasFocus ? 3 : t.borderWidth,
       ),
     );
@@ -145,7 +158,7 @@ class _WelkInputState extends State<WelkInput> {
       height: 1.5,
     );
     final action = widget.endAction;
-    return DefaultTextStyle(
+    final input = DefaultTextStyle(
       style: style,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -164,96 +177,104 @@ class _WelkInputState extends State<WelkInput> {
             child: MouseRegion(
               onEnter: (_) => setState(() => _hover = true),
               onExit: (_) => setState(() => _hover = false),
-              child: CustomPaint(
-                painter: WelkHardShadowPainter(
-                  shape: shape,
-                  color: t.ink,
-                  offset: const Offset(3, 3),
-                ),
-                child: DecoratedBox(
-                  decoration: ShapeDecoration(
-                    color: !_enabled || readOnly || (_hover && !_node.hasFocus)
-                        ? t.muted
-                        : t.paper,
+              child: WelkFocusRing(
+                visible: t.isDark && _enabled && _node.hasFocus,
+                color: t.focus,
+                shape: shape,
+                gap: 3,
+                child: CustomPaint(
+                  painter: WelkHardShadowPainter(
                     shape: shape,
+                    color: t.shadow,
+                    offset: const Offset(3, 3),
                   ),
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Semantics(
-                            label: widget.label,
-                            hint: widget.isRequired ? 'Required' : null,
-                            validationResult: error
-                                ? SemanticsValidationResult.invalid
-                                : SemanticsValidationResult.none,
-                            child: TextField(
-                              controller: _controller,
-                              focusNode: _node,
-                              autofocus: widget.autofocus,
-                              enabled: _enabled,
-                              readOnly: readOnly,
-                              style: style,
-                              cursorColor: t.ink,
-                              keyboardType: _keyboard,
-                              obscureText:
-                                  widget.type == WelkInputType.password,
-                              autocorrect: widget.type == WelkInputType.text,
-                              enableSuggestions:
-                                  widget.type != WelkInputType.password,
-                              textInputAction:
-                                  widget.textInputAction ??
-                                  (widget.type == WelkInputType.search
-                                      ? TextInputAction.search
-                                      : TextInputAction.done),
-                              autofillHints: widget.autofillHints,
-                              inputFormatters: widget.inputFormatters,
-                              onSubmitted: widget.onSubmitted,
-                              onChanged: (next) {
-                                if (next != widget.value) {
-                                  widget.onChanged?.call(next);
-                                }
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  if (mounted) _sync();
-                                });
-                              },
-                              decoration: InputDecoration(
-                                isDense: true,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                filled: false,
-                                hintText: widget.placeholder,
-                                hintStyle: style.copyWith(
-                                  color: t.ink.withValues(alpha: 0.65),
-                                ),
-                                contentPadding: EdgeInsetsDirectional.fromSTEB(
-                                  18,
-                                  14,
-                                  action == null ? 18 : 8,
-                                  14,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minHeight: 52,
+                  child: DecoratedBox(
+                    decoration: ShapeDecoration(
+                      color:
+                          !_enabled || readOnly || (_hover && !_node.hasFocus)
+                          ? t.muted
+                          : t.paper,
+                      shape: shape,
+                    ),
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Semantics(
+                              label: widget.label,
+                              hint: widget.isRequired ? 'Required' : null,
+                              validationResult: error
+                                  ? SemanticsValidationResult.invalid
+                                  : SemanticsValidationResult.none,
+                              child: TextField(
+                                controller: _controller,
+                                focusNode: _node,
+                                autofocus: widget.autofocus,
+                                enabled: _enabled,
+                                readOnly: readOnly,
+                                style: style,
+                                cursorColor: t.ink,
+                                keyboardType: _keyboard,
+                                obscureText:
+                                    widget.type == WelkInputType.password,
+                                autocorrect: widget.type == WelkInputType.text,
+                                enableSuggestions:
+                                    widget.type != WelkInputType.password,
+                                textInputAction:
+                                    widget.textInputAction ??
+                                    (widget.type == WelkInputType.search
+                                        ? TextInputAction.search
+                                        : TextInputAction.done),
+                                autofillHints: widget.autofillHints,
+                                inputFormatters: widget.inputFormatters,
+                                onSubmitted: widget.onSubmitted,
+                                onChanged: (next) {
+                                  if (next != widget.value) {
+                                    widget.onChanged?.call(next);
+                                  }
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    if (mounted) _sync();
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  filled: false,
+                                  hintText: widget.placeholder,
+                                  hintStyle: style.copyWith(
+                                    color: t.ink.withValues(alpha: 0.65),
+                                  ),
+                                  contentPadding:
+                                      EdgeInsetsDirectional.fromSTEB(
+                                        18,
+                                        14,
+                                        action == null ? 18 : 8,
+                                        14,
+                                      ),
+                                  constraints: const BoxConstraints(
+                                    minHeight: 52,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        if (action != null)
-                          Padding(
-                            padding: const EdgeInsetsDirectional.only(end: 2),
-                            child: _InputEndAction(
-                              action: action,
-                              enabled: _enabled && !action.disabled,
-                              dimmed: _enabled && action.disabled,
+                          if (action != null)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 2),
+                              child: _InputEndAction(
+                                action: action,
+                                enabled: _enabled && !action.disabled,
+                                dimmed: _enabled && action.disabled,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -270,6 +291,11 @@ class _WelkInputState extends State<WelkInput> {
             ),
         ],
       ),
+    );
+    return WelkTheme.scope(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+      child: input,
     );
   }
 }
@@ -307,7 +333,8 @@ class _InputEndActionState extends State<_InputEndAction> {
 
   @override
   Widget build(BuildContext context) {
-    final t = WelkTheme.of(context);
+    final t = WelkTheme.of(context).resolveColors(context);
+    final highlighted = _hover && widget.enabled;
     return Tooltip(
       message: widget.action.label,
       excludeFromSemantics: true,
@@ -350,9 +377,7 @@ class _InputEndActionState extends State<_InputEndAction> {
                       height: 40,
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: _hover && widget.enabled
-                            ? t.accent
-                            : Colors.transparent,
+                        color: highlighted ? t.accent : Colors.transparent,
                         borderRadius: BorderRadius.circular(5.2),
                       ),
                       foregroundDecoration: _focus && widget.enabled
@@ -362,7 +387,10 @@ class _InputEndActionState extends State<_InputEndAction> {
                             )
                           : null,
                       child: IconTheme(
-                        data: IconThemeData(color: t.ink, size: 24),
+                        data: IconThemeData(
+                          color: highlighted ? t.onFill(t.accent) : t.ink,
+                          size: 24,
+                        ),
                         child: widget.action.icon,
                       ),
                     ),

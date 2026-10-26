@@ -23,6 +23,14 @@ dev_dependencies:
 
 flutter:
   assets:
+    - assets/icons/person/male_user.png
+    - assets/icons/person/female_user.png
+    - assets/icons/person/male_admin.png
+    - assets/icons/person/female_admin.png
+    - assets/icons/person/female_admin_white.png
+    - assets/icons/person/male_admin_white.png
+    - assets/icons/person/male_user_white.png
+    - assets/icons/person/female_user_white.png
     - assets/fallbacks/
     - assets/portraits/
     - assets/stickers/

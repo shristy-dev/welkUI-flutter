@@ -27,6 +27,7 @@ WelkSnackBarController showWelkSnackBar({
   WelkSnackBarPosition position = WelkSnackBarPosition.bottom,
   Duration autoHideDuration = Duration.zero,
   String closeLabel = 'Dismiss notification',
+  bool? overRideDarkMode,
 }) {
   assert(!autoHideDuration.isNegative);
   final key = GlobalKey<_SnackOverlayState>();
@@ -64,20 +65,26 @@ WelkSnackBarController showWelkSnackBar({
 
   entry = OverlayEntry(
     builder: (overlayContext) => themes.wrap(
-      _SnackOverlay(
-        key: key,
-        reduced: reduced,
-        position: position,
-        onRemoved: remove,
-        child: MediaQuery(
-          data: MediaQuery.of(overlayContext)
-              .copyWith(disableAnimations: reduced),
-          child: WelkSnackBar(
-            message: message,
-            variant: variant,
-            autoHideDuration: autoHideDuration,
-            closeLabel: closeLabel,
-            onClose: close,
+      Builder(
+        builder: (context) => WelkTheme.scope(
+          context,
+          overRideDarkMode: overRideDarkMode,
+          child: _SnackOverlay(
+            key: key,
+            reduced: reduced,
+            position: position,
+            onRemoved: remove,
+            child: MediaQuery(
+              data: MediaQuery.of(overlayContext)
+                  .copyWith(disableAnimations: reduced),
+              child: WelkSnackBar(
+                message: message,
+                variant: variant,
+                autoHideDuration: autoHideDuration,
+                closeLabel: closeLabel,
+                onClose: close,
+              ),
+            ),
           ),
         ),
       ),
@@ -96,6 +103,7 @@ class WelkSnackBar extends StatefulWidget {
     this.variant = WelkSnackBarVariant.standard,
     this.autoHideDuration = Duration.zero,
     this.closeLabel = 'Dismiss notification',
+    this.overRideDarkMode,
   }) : assert(!autoHideDuration.isNegative);
 
   final Widget message;
@@ -103,6 +111,7 @@ class WelkSnackBar extends StatefulWidget {
   final WelkSnackBarVariant variant;
   final Duration autoHideDuration;
   final String closeLabel;
+  final bool? overRideDarkMode;
 
   @override
   State<WelkSnackBar> createState() => _WelkSnackBarState();
@@ -143,8 +152,14 @@ class _WelkSnackBarState extends State<WelkSnackBar> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = WelkTheme.of(context);
+  Widget build(BuildContext context) => WelkTheme.scope(
+    context,
+    overRideDarkMode: widget.overRideDarkMode,
+    child: Builder(builder: _build),
+  );
+
+  Widget _build(BuildContext context) {
+    final theme = WelkTheme.of(context).resolveColors(context);
     final color = switch (widget.variant) {
       WelkSnackBarVariant.standard => theme.accent,
       WelkSnackBarVariant.info => theme.info,
@@ -153,7 +168,7 @@ class _WelkSnackBarState extends State<WelkSnackBar> {
       WelkSnackBarVariant.error => theme.error,
     };
     final shape = WelkShapeBorder(
-      strokeColor: theme.ink,
+      strokeColor: theme.outline,
       strokeWidth: 3,
       radii: const WelkCornerRadii(
         topLeft: Radius.elliptical(16, 10),
@@ -197,7 +212,7 @@ class _WelkSnackBarState extends State<WelkSnackBar> {
                 child: CustomPaint(
                   painter: WelkHardShadowPainter(
                     shape: shape,
-                    color: theme.ink,
+                    color: theme.shadow,
                     offset: const Offset(5, 5),
                   ),
                   child: Container(
@@ -209,8 +224,9 @@ class _WelkSnackBarState extends State<WelkSnackBar> {
                         CustomPaint(
                           size: const Size(40, 40),
                           painter: _BurstPainter(
-                            ink: theme.ink,
+                            ink: theme.outline,
                             paper: theme.paper,
+                            foreground: theme.ink,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -221,7 +237,7 @@ class _WelkSnackBarState extends State<WelkSnackBar> {
                               style: TextStyle(
                                 fontFamily: theme.fontFamily,
                                 package: theme.fontPackage,
-                                color: theme.ink,
+                                color: theme.onFill(color),
                                 fontSize: 15.2,
                                 height: 1.5,
                               ),
@@ -230,15 +246,9 @@ class _WelkSnackBarState extends State<WelkSnackBar> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        WelkTheme(
-                          data: theme.copyWith(
-                            accent: theme.paper,
-                            accentHover: theme.muted,
-                          ),
-                          child: WelkIconButton.close(
-                            label: widget.closeLabel,
-                            onPressed: widget.onClose,
-                          ),
+                        WelkIconButton.close(
+                          label: widget.closeLabel,
+                          onPressed: widget.onClose,
                         ),
                       ],
                     ),
@@ -358,9 +368,14 @@ class _SnackOverlayState extends State<_SnackOverlay>
 }
 
 class _BurstPainter extends CustomPainter {
-  const _BurstPainter({required this.ink, required this.paper});
+  const _BurstPainter({
+    required this.ink,
+    required this.paper,
+    required this.foreground,
+  });
   final Color ink;
   final Color paper;
+  final Color foreground;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -397,11 +412,13 @@ class _BurstPainter extends CustomPainter {
       ..lineTo(22, 13)
       ..lineTo(16, 13)
       ..close();
-    canvas.drawPath(bolt, Paint()..color = ink);
+    canvas.drawPath(bolt, Paint()..color = foreground);
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(_BurstPainter oldDelegate) =>
-      ink != oldDelegate.ink || paper != oldDelegate.paper;
+      ink != oldDelegate.ink ||
+      paper != oldDelegate.paper ||
+      foreground != oldDelegate.foreground;
 }
