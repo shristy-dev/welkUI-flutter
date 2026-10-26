@@ -29,6 +29,7 @@ class WelkButton extends StatefulWidget {
     this.size = WelkButtonSize.medium,
     this.focusNode,
     this.autofocus = false,
+    this.isDark,
   });
 
   final Widget child;
@@ -37,6 +38,9 @@ class WelkButton extends StatefulWidget {
   final WelkButtonSize size;
   final FocusNode? focusNode;
   final bool autofocus;
+
+  /// Overrides dark mode. When null, follows the surrounding Flutter [Theme].
+  final bool? isDark;
 
   @override
   State<WelkButton> createState() => _WelkButtonState();
@@ -58,6 +62,9 @@ class _WelkButtonState extends State<WelkButton>
   @override
   Widget build(BuildContext context) {
     final theme = WelkTheme.of(context);
+    final isDark =
+        widget.isDark ?? Theme.of(context).brightness == Brightness.dark;
+    final outline = isDark ? const Color(0xFFBDBDBD) : theme.ink;
     final disabled = widget.onPressed == null;
     final reducedMotion = welkAnimationsDisabled(context);
     final duration = reducedMotion
@@ -65,13 +72,20 @@ class _WelkButtonState extends State<WelkButton>
         : WelkTapFeedback.transitionDuration;
     final color = switch (widget.variant) {
       WelkButtonVariant.primary => theme.accent,
-      WelkButtonVariant.secondary => theme.paper,
+      WelkButtonVariant.secondary =>
+        isDark ? const Color(0xFF303030) : theme.paper,
       WelkButtonVariant.error => theme.error,
       WelkButtonVariant.warning => theme.warning,
       WelkButtonVariant.ghost => Colors.transparent,
       WelkButtonVariant.info => theme.info,
       WelkButtonVariant.success => theme.success,
     };
+    final foreground = !isDark
+        ? theme.ink
+        : widget.variant == WelkButtonVariant.ghost ||
+              ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+        ? const Color(0xFFF5F5F5)
+        : const Color(0xFF242424);
     final size = switch (widget.size) {
       WelkButtonSize.small => (vertical: 6.4, horizontal: 12.0, font: 14.0),
       WelkButtonSize.medium => (vertical: 10.4, horizontal: 17.6, font: 16.0),
@@ -80,7 +94,7 @@ class _WelkButtonState extends State<WelkButton>
     final pressed = !disabled && feedbackPressed;
     final shape = WelkShapeBorder(
       radii: welkButtonRadii,
-      strokeColor: theme.ink,
+      strokeColor: outline,
       strokeWidth: theme.borderWidth,
     );
     final surface = TweenAnimationBuilder<Offset>(
@@ -92,7 +106,7 @@ class _WelkButtonState extends State<WelkButton>
       builder: (context, shadowOffset, child) => CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: theme.ink,
+          color: outline,
           offset: shadowOffset,
         ),
         child: child,
@@ -105,13 +119,18 @@ class _WelkButtonState extends State<WelkButton>
         ),
         child: DefaultTextStyle.merge(
           style: TextStyle(
-            color: theme.ink,
+            color: foreground,
             fontFamily: theme.fontFamily,
             package: theme.fontPackage,
             fontSize: size.font,
             fontWeight: FontWeight.w700,
           ),
-          child: widget.child,
+          child: isDark
+              ? IconTheme.merge(
+                  data: IconThemeData(color: foreground),
+                  child: widget.child,
+                )
+              : widget.child,
         ),
       ),
     );
@@ -127,7 +146,7 @@ class _WelkButtonState extends State<WelkButton>
         angle: -0.017453292519943295,
         child: WelkFocusRing(
           visible: _showFocus && !disabled,
-          color: theme.focus,
+          color: isDark ? theme.info : theme.focus,
           shape: shape,
           gap: 5,
           child: surface,

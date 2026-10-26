@@ -1,3 +1,8 @@
+## Unreleased
+
+* Add automatic dark-mode support and an `isDark` override to `WelkButton`,
+  with a charcoal secondary surface and contrasting text, icons, and outlines.
+
 ## 0.1.5
 
 * Use a compact 36px calendar container inside the date input field while

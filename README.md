@@ -70,6 +70,22 @@ Short Stack is bundled locally; no additional font setup is needed.
 | `WelkDropDown` | `WelkSticker` | `WelkTimePicker` |
 | `WelkRangeSlider` | `WelkStickerCard` | `WelkTabs` |
 
+## Button dark mode
+
+`WelkButton` follows `ThemeData.brightness` automatically. Set `isDark` to
+override it for an individual button (`true` for dark, `false` for light).
+Dark mode uses a charcoal-gray secondary surface, gray outlines and hard
+shadows, and contrasting text and icons while retaining the semantic variant colors.
+
+```dart
+WelkButton(
+  isDark: true,
+  variant: WelkButtonVariant.secondary,
+  onPressed: () {},
+  child: const Text('Continue'),
+)
+```
+
 ## Contributing & license
 
 See the [contribution guidelines](CONTRIBUTING.md) for setup and pull requests.
