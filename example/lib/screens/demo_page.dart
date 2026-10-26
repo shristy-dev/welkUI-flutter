@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:welkui_flutter/welkui_flutter.dart';
 
+import '../example_theme_mode.dart';
 import '../preview_mode.dart';
 
 class DemoPage extends StatelessWidget {
@@ -14,13 +16,26 @@ class DemoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
+    floatingActionButton: PreviewMode.of(context)
+        ? null
+        : WelkIconButton(
+            icon: Icon(
+              ExampleThemeMode.of(context).darkMode
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+            ),
+            label: ExampleThemeMode.of(context).darkMode
+                ? 'Switch to light mode'
+                : 'Switch to dark mode',
+            onPressed: ExampleThemeMode.of(context).toggle,
+          ),
     body: SafeArea(
       child: ListView(
         padding: EdgeInsets.fromLTRB(
           isCompact(context) ? 16 : 20,
           12,
           isCompact(context) ? 16 : 20,
-          32,
+          PreviewMode.of(context) ? 32 : 104,
         ),
         children: children,
       ),

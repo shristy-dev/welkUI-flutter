@@ -8,7 +8,7 @@ void main() {
   Future<void> pumpButton(
     WidgetTester tester, {
     Brightness brightness = Brightness.light,
-    bool? isDark,
+    bool? overRideDarkMode,
     WelkButtonVariant variant = WelkButtonVariant.secondary,
     WelkThemeData theme = const WelkThemeData(),
   }) async {
@@ -19,7 +19,7 @@ void main() {
           data: theme,
           child: Center(
             child: WelkButton(
-              isDark: isDark,
+              overRideDarkMode: overRideDarkMode,
               variant: variant,
               onPressed: () {},
               child: const Row(
@@ -77,7 +77,7 @@ void main() {
       foreground(tester),
     );
     final outline = (decoration(tester).shape as WelkShapeBorder).strokeColor;
-    expect(outline, const Color(0xFFBDBDBD));
+    expect(outline, Colors.black);
     final shadow = tester.widget<CustomPaint>(
       find.descendant(
         of: find.byType(WelkButton),
@@ -87,20 +87,27 @@ void main() {
         ),
       ),
     );
-    expect((shadow.painter! as WelkHardShadowPainter).color, outline);
+    expect(
+      (shadow.painter! as WelkHardShadowPainter).color,
+      const Color(0xFFBDBDBD),
+    );
     await pumpButton(tester);
     expect(decoration(tester).color, const WelkThemeData().paper);
   });
 
   testWidgets('explicit override works in both directions', (tester) async {
-    await pumpButton(tester, isDark: true);
+    await pumpButton(tester, overRideDarkMode: true);
     expect(decoration(tester).color, const Color(0xFF303030));
-    await pumpButton(tester, brightness: Brightness.dark, isDark: false);
+    await pumpButton(
+      tester,
+      brightness: Brightness.dark,
+      overRideDarkMode: false,
+    );
     expect(decoration(tester).color, const WelkThemeData().paper);
     expect(foreground(tester), const WelkThemeData().ink);
   });
 
-  testWidgets('dark variants retain fills and contrasting foregrounds', (
+  testWidgets('dark variants tint fills and retain contrasting foregrounds', (
     tester,
   ) async {
     const theme = WelkThemeData();
@@ -113,12 +120,28 @@ void main() {
       WelkButtonVariant.ghost: Colors.transparent,
     };
     for (final entry in fills.entries) {
-      await pumpButton(tester, isDark: true, variant: entry.key);
-      expect(decoration(tester).color, entry.value);
+      await pumpButton(tester, overRideDarkMode: true, variant: entry.key);
+      final ghost = entry.key == WelkButtonVariant.ghost;
+      final expectedColor = ghost
+          ? entry.value
+          : Color.alphaBlend(theme.darkButtonTint, entry.value);
+      expect(decoration(tester).color, expectedColor);
+      if (!ghost) {
+        expect(
+          expectedColor.computeLuminance(),
+          lessThan(entry.value.computeLuminance()),
+        );
+      }
+      expect(
+        (decoration(tester).shape as WelkShapeBorder).strokeColor,
+        Colors.black,
+      );
       expect(
         foreground(tester),
-        entry.key == WelkButtonVariant.ghost
-            ? const Color(0xFFF5F5F5)
+        ghost ||
+                ThemeData.estimateBrightnessForColor(expectedColor) ==
+                    Brightness.dark
+            ? theme.darkInk
             : theme.ink,
       );
     }
@@ -127,10 +150,82 @@ void main() {
   testWidgets('dark custom variant fills receive light labels', (tester) async {
     await pumpButton(
       tester,
-      isDark: true,
+      overRideDarkMode: true,
       variant: WelkButtonVariant.primary,
       theme: const WelkThemeData(accent: Color(0xFF303030)),
     );
     expect(foreground(tester), const Color(0xFFF5F5F5));
   });
+
+  testWidgets(
+    'global preference overrides Flutter brightness and updates live',
+    (tester) async {
+      await pumpButton(tester, theme: const WelkThemeData(darkMode: true));
+      expect(decoration(tester).color, const Color(0xFF303030));
+      await pumpButton(
+        tester,
+        brightness: Brightness.dark,
+        theme: const WelkThemeData(darkMode: false),
+      );
+      expect(decoration(tester).color, const WelkThemeData().paper);
+    },
+  );
+
+  testWidgets('local preference overrides global mode in both directions', (
+    tester,
+  ) async {
+    await pumpButton(
+      tester,
+      theme: const WelkThemeData(darkMode: true),
+      overRideDarkMode: false,
+    );
+    expect(decoration(tester).color, const WelkThemeData().paper);
+    await pumpButton(
+      tester,
+      theme: const WelkThemeData(darkMode: false),
+      overRideDarkMode: true,
+    );
+    expect(decoration(tester).color, const Color(0xFF303030));
+  });
+
+  testWidgets(
+    'dark palette tokens are customizable and copyWith retains them',
+    (tester) async {
+      const theme = WelkThemeData(
+        darkMode: false,
+        darkPaper: Colors.black,
+        darkInk: Colors.white,
+        darkOutline: Colors.grey,
+        darkShadow: Colors.white70,
+        darkButtonTint: Color(0x66000000),
+        darkFocus: Colors.cyan,
+      );
+      final darkTheme = theme.copyWith(darkMode: true);
+      await pumpButton(tester, theme: darkTheme);
+      expect(decoration(tester).color, theme.darkPaper);
+      expect(foreground(tester), theme.darkInk);
+      expect(
+        (decoration(tester).shape as WelkShapeBorder).strokeColor,
+        theme.darkOutline,
+      );
+      expect(darkTheme.darkFocus, theme.darkFocus);
+      expect(darkTheme.darkShadow, theme.darkShadow);
+      expect(darkTheme.darkButtonTint, theme.darkButtonTint);
+      final updated = darkTheme.copyWith(
+        darkPaper: Colors.blueGrey,
+        darkInk: Colors.yellow,
+        darkOutline: Colors.white,
+        darkShadow: Colors.white,
+        darkButtonTint: Colors.transparent,
+        darkFocus: Colors.green,
+      );
+      expect(updated.darkMode, isTrue);
+      expect(updated.darkPaper, Colors.blueGrey);
+      expect(updated.darkInk, Colors.yellow);
+      expect(updated.darkOutline, Colors.white);
+      expect(updated.darkShadow, Colors.white);
+      expect(updated.darkButtonTint, Colors.transparent);
+      expect(updated.darkFocus, Colors.green);
+    },
+  );
 }

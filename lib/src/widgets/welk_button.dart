@@ -29,7 +29,7 @@ class WelkButton extends StatefulWidget {
     this.size = WelkButtonSize.medium,
     this.focusNode,
     this.autofocus = false,
-    this.isDark,
+    this.overRideDarkMode,
   });
 
   final Widget child;
@@ -39,8 +39,10 @@ class WelkButton extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
 
-  /// Overrides dark mode. When null, follows the surrounding Flutter [Theme].
-  final bool? isDark;
+  /// Overrides [WelkThemeData.darkMode] for this button.
+  ///
+  /// Null inherits the global preference, falling back to Flutter's [Theme].
+  final bool? overRideDarkMode;
 
   @override
   State<WelkButton> createState() => _WelkButtonState();
@@ -62,29 +64,36 @@ class _WelkButtonState extends State<WelkButton>
   @override
   Widget build(BuildContext context) {
     final theme = WelkTheme.of(context);
-    final isDark =
-        widget.isDark ?? Theme.of(context).brightness == Brightness.dark;
-    final outline = isDark ? const Color(0xFFBDBDBD) : theme.ink;
+    final isDark = theme.resolveDarkMode(
+      context,
+      overRideDarkMode: widget.overRideDarkMode,
+    );
+    final outline = isDark ? theme.darkOutline : theme.ink;
     final disabled = widget.onPressed == null;
     final reducedMotion = welkAnimationsDisabled(context);
     final duration = reducedMotion
         ? Duration.zero
         : WelkTapFeedback.transitionDuration;
-    final color = switch (widget.variant) {
+    final baseColor = switch (widget.variant) {
       WelkButtonVariant.primary => theme.accent,
-      WelkButtonVariant.secondary =>
-        isDark ? const Color(0xFF303030) : theme.paper,
+      WelkButtonVariant.secondary => isDark ? theme.darkPaper : theme.paper,
       WelkButtonVariant.error => theme.error,
       WelkButtonVariant.warning => theme.warning,
       WelkButtonVariant.ghost => Colors.transparent,
       WelkButtonVariant.info => theme.info,
       WelkButtonVariant.success => theme.success,
     };
+    final color =
+        isDark &&
+            widget.variant != WelkButtonVariant.secondary &&
+            widget.variant != WelkButtonVariant.ghost
+        ? Color.alphaBlend(theme.darkButtonTint, baseColor)
+        : baseColor;
     final foreground = !isDark
         ? theme.ink
         : widget.variant == WelkButtonVariant.ghost ||
               ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-        ? const Color(0xFFF5F5F5)
+        ? theme.darkInk
         : const Color(0xFF242424);
     final size = switch (widget.size) {
       WelkButtonSize.small => (vertical: 6.4, horizontal: 12.0, font: 14.0),
@@ -106,7 +115,7 @@ class _WelkButtonState extends State<WelkButton>
       builder: (context, shadowOffset, child) => CustomPaint(
         painter: WelkHardShadowPainter(
           shape: shape,
-          color: outline,
+          color: isDark ? theme.darkShadow : theme.ink,
           offset: shadowOffset,
         ),
         child: child,
@@ -146,7 +155,7 @@ class _WelkButtonState extends State<WelkButton>
         angle: -0.017453292519943295,
         child: WelkFocusRing(
           visible: _showFocus && !disabled,
-          color: isDark ? theme.info : theme.focus,
+          color: isDark ? theme.darkFocus : theme.focus,
           shape: shape,
           gap: 5,
           child: surface,

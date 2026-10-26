@@ -1,7 +1,12 @@
 ## Unreleased
 
-* Add automatic dark-mode support and an `isDark` override to `WelkButton`,
-  with a charcoal secondary surface and contrasting text, icons, and outlines.
+* Add a global `WelkThemeData.darkMode` preference and customizable dark palette
+  tokens, consumed by `WelkButton` with an `overRideDarkMode` local override
+  replacing `isDark`.
+* Add a floating `WelkIconButton` global theme toggle to example app screens.
+* Use black-tinted semantic fills, black borders, whitish-gray hard shadows,
+  and contrasting text and icons for dark-mode buttons, with customizable
+  `darkButtonTint` and `darkShadow` tokens.
 
 ## 0.1.5
 

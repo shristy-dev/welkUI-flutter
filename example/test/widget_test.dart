@@ -107,6 +107,77 @@ void main() {
     await tester.pumpWidget(const WelkExampleApp(embedMode: true));
     expect(find.byType(AppBar), findsNothing);
     expect(find.byType(WelkMenu), findsNothing);
+    expect(find.byType(WelkIconButton), findsNothing);
+  });
+
+  testWidgets('floating theme toggle updates buttons globally across routes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const WelkExampleApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Switch to dark mode'));
+    await tester.pumpAndSettle();
+    final darkTheme = Theme.of(tester.element(find.byType(Scaffold)));
+    expect(darkTheme.brightness, Brightness.dark);
+    expect(darkTheme.scaffoldBackgroundColor, const WelkThemeData().darkPaper);
+    expect(darkTheme.canvasColor, const WelkThemeData().darkPaper);
+    expect(darkTheme.colorScheme.surface, const WelkThemeData().darkPaper);
+    expect(
+      darkTheme.appBarTheme.backgroundColor,
+      const WelkThemeData().darkPaper,
+    );
+    expect(
+      darkTheme.appBarTheme.foregroundColor,
+      const WelkThemeData().darkInk,
+    );
+    expect(
+      darkTheme.textTheme.bodyMedium!.color,
+      const WelkThemeData().darkInk,
+    );
+    await tester.tap(find.text('WelkButton'));
+    await tester.pumpAndSettle();
+
+    Color? secondaryColor() {
+      final button = find.byWidgetPredicate(
+        (widget) =>
+            widget is WelkButton &&
+            widget.variant == WelkButtonVariant.secondary &&
+            widget.onPressed != null &&
+            widget.overRideDarkMode == null,
+      );
+      final surface = find.descendant(
+        of: button,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Container && widget.decoration is ShapeDecoration,
+        ),
+      );
+      return (tester.widget<Container>(surface).decoration! as ShapeDecoration)
+          .color;
+    }
+
+    expect(secondaryColor(), const WelkThemeData().darkPaper);
+    expect(
+      WelkTheme.of(tester.element(find.byType(Scaffold))).darkMode,
+      isTrue,
+    );
+    await tester.tap(find.text('Secondary').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Button activations: 1'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Switch to light mode'));
+    await tester.pumpAndSettle();
+    expect(secondaryColor(), const WelkThemeData().paper);
+    final lightTheme = Theme.of(tester.element(find.byType(Scaffold)));
+    expect(lightTheme.brightness, Brightness.light);
+    expect(lightTheme.scaffoldBackgroundColor, Colors.white);
+    expect(lightTheme.canvasColor, Colors.white);
+    expect(lightTheme.colorScheme.surface, Colors.white);
+    expect(lightTheme.appBarTheme.backgroundColor, Colors.white);
+    expect(lightTheme.textTheme.bodyMedium!.color, const WelkThemeData().ink);
+    expect(find.text('Button activations: 1'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('Switch to dark mode'), findsOneWidget);
   });
 
   testWidgets('initial menu navigates to every widget screen and back', (

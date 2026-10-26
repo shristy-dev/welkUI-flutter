@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 @immutable
 class WelkThemeData {
   const WelkThemeData({
+    this.darkMode,
+    this.darkPaper = const Color(0xFF303030),
+    this.darkInk = const Color(0xFFF5F5F5),
+    this.darkOutline = const Color(0xFF000000),
+    this.darkShadow = const Color(0xFFBDBDBD),
+    this.darkButtonTint = const Color(0x1A000000),
+    this.darkFocus = const Color(0xFF82CAFF),
     this.paper = const Color(0xFFFFFDF5),
     this.white = const Color(0xFFFFFFFF),
     this.ink = const Color(0xFF242424),
@@ -26,6 +33,18 @@ class WelkThemeData {
     this.cardShadowOffset = const Offset(3, 3),
     this.switchShadowOffset = const Offset(2, 2),
   });
+
+  /// Global dark-mode preference for supported widgets (currently `WelkButton`).
+  ///
+  /// Null follows Flutter's [ThemeData.brightness]. A widget's
+  /// `overRideDarkMode` takes precedence over this preference.
+  final bool? darkMode;
+  final Color darkPaper;
+  final Color darkInk;
+  final Color darkOutline;
+  final Color darkShadow;
+  final Color darkButtonTint;
+  final Color darkFocus;
 
   final Color paper;
   final Color white;
@@ -51,6 +70,13 @@ class WelkThemeData {
 
   /// Returns a copy with selected design values replaced.
   WelkThemeData copyWith({
+    bool? darkMode,
+    Color? darkPaper,
+    Color? darkInk,
+    Color? darkOutline,
+    Color? darkShadow,
+    Color? darkButtonTint,
+    Color? darkFocus,
     Color? paper,
     Color? white,
     Color? ink,
@@ -74,6 +100,13 @@ class WelkThemeData {
     Offset? switchShadowOffset,
   }) {
     return WelkThemeData(
+      darkMode: darkMode ?? this.darkMode,
+      darkPaper: darkPaper ?? this.darkPaper,
+      darkInk: darkInk ?? this.darkInk,
+      darkOutline: darkOutline ?? this.darkOutline,
+      darkShadow: darkShadow ?? this.darkShadow,
+      darkButtonTint: darkButtonTint ?? this.darkButtonTint,
+      darkFocus: darkFocus ?? this.darkFocus,
       paper: paper ?? this.paper,
       white: white ?? this.white,
       ink: ink ?? this.ink,
@@ -97,6 +130,12 @@ class WelkThemeData {
       switchShadowOffset: switchShadowOffset ?? this.switchShadowOffset,
     );
   }
+
+  /// Resolves a local override, then the global preference, then Flutter's theme.
+  bool resolveDarkMode(BuildContext context, {bool? overRideDarkMode}) =>
+      overRideDarkMode ??
+      darkMode ??
+      Theme.of(context).brightness == Brightness.dark;
 }
 
 /// Provides WelkUI design tokens to the widgets below it in the tree.

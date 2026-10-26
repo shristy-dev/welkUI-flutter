@@ -70,16 +70,35 @@ Short Stack is bundled locally; no additional font setup is needed.
 | `WelkDropDown` | `WelkSticker` | `WelkTimePicker` |
 | `WelkRangeSlider` | `WelkStickerCard` | `WelkTabs` |
 
-## Button dark mode
+## Global dark mode
 
-`WelkButton` follows `ThemeData.brightness` automatically. Set `isDark` to
-override it for an individual button (`true` for dark, `false` for light).
-Dark mode uses a charcoal-gray secondary surface, gray outlines and hard
-shadows, and contrasting text and icons while retaining the semantic variant colors.
+Set `WelkThemeData.darkMode` once in your app's `WelkTheme` to control dark mode
+globally. Rebuild the provider with `data.copyWith(darkMode: true)` or `false`
+to switch modes. When `darkMode` is null (the default), widgets follow
+Flutter's `ThemeData.brightness`.
+
+Currently only `WelkButton` consumes the dark-mode preference; other widgets
+retain their existing appearance. The example app includes a floating
+`WelkIconButton` theme toggle on non-embedded screens.
+
+```dart
+WelkTheme(
+  data: const WelkThemeData(darkMode: true),
+  child: MaterialApp(home: MyHomePage()),
+)
+```
+
+Set `overRideDarkMode` on an individual `WelkButton` to force dark (`true`) or
+light (`false`), regardless of the global setting. Omit it to inherit.
+Dark mode adds a 10% black tint to semantic variant fills, with black borders,
+whitish-gray hard shadows, and contrasting text and icons. Secondary buttons use
+a charcoal-gray surface, and ghost buttons remain transparent.
+Customize the dark palette with `darkPaper`, `darkInk`, `darkOutline`,
+`darkShadow`, `darkButtonTint`, and `darkFocus` design tokens.
 
 ```dart
 WelkButton(
-  isDark: true,
+  overRideDarkMode: true,
   variant: WelkButtonVariant.secondary,
   onPressed: () {},
   child: const Text('Continue'),
