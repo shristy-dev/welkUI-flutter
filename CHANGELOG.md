@@ -1,4 +1,4 @@
-## Unreleased
+## 0.1.6
 
 * Select dedicated black and white avatar assets for light and dark modes
   without filtering custom icons or profile images.
