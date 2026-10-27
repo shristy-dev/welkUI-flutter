@@ -19,7 +19,9 @@ class DemoPage extends StatelessWidget {
         ? null
         : ExampleThemeMode.maybeOf(context);
     return Scaffold(
-      appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
+      appBar: PreviewMode.of(context)
+          ? null
+          : AppBar(title: Text(title), automaticallyImplyLeading: false),
       floatingActionButton: themeMode == null
           ? null
           : WelkIconButton(

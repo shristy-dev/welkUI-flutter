@@ -106,10 +106,7 @@ void main() {
         await tester.pumpWidget(WelkExampleApp(embedMode: embedMode));
         await tester.pumpAndSettle();
         expect(find.byType(AppBar), embedMode ? findsNothing : findsOneWidget);
-        expect(
-          find.byType(BackButton),
-          embedMode ? findsNothing : findsOneWidget,
-        );
+        expect(find.byType(BackButton), findsNothing);
         expect(
           find.text(
             {
@@ -201,7 +198,7 @@ void main() {
     expect(lightTheme.appBarTheme.backgroundColor, Colors.white);
     expect(lightTheme.textTheme.bodyMedium!.color, const WelkThemeData().ink);
     expect(find.text('Button activations: 1'), findsOneWidget);
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('Switch to dark mode'), findsOneWidget);
   });
@@ -221,7 +218,8 @@ void main() {
       await tester.tap(find.text(title));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(AppBar, title), findsOneWidget);
-      await tester.pageBack();
+      expect(find.byType(BackButton), findsNothing);
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('WelkUI Flutter'), findsOneWidget);
     }
