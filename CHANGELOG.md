@@ -1,3 +1,8 @@
+## 0.1.8
+
+* Include bundled avatar icons in the published package, fixing missing-asset
+  warnings and ensuring default avatars load in light and dark modes.
+
 ## 0.1.7
 * Add a global `WelkThemeData.textScaleFactor` preference and customizable text
   scaling across all widgets, with `overRideTextScaleFactor` local overrides.
