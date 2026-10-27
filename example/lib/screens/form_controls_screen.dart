@@ -285,6 +285,7 @@ class _DropDownScreenState extends State<DropDownScreen> {
         value: _hero,
         onChanged: (v) => setState(() => _hero = v),
       ),
+      SizedBox(height: 20),
       Text('Selected: ${_hero ?? 'none'}'),
       const DemoHeading('Searchable and preselected'),
       WelkDropDown(
