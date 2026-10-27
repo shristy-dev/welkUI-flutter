@@ -80,10 +80,7 @@ void main() {
         await tester.pumpWidget(WelkExampleApp(embedMode: embedMode));
         await tester.pumpAndSettle();
         expect(find.byType(AppBar), embedMode ? findsNothing : findsOneWidget);
-        expect(
-          find.byType(BackButton),
-          embedMode ? findsNothing : findsOneWidget,
-        );
+        expect(find.byType(BackButton), findsNothing);
         expect(
           find.text(
             {
@@ -124,7 +121,8 @@ void main() {
       await tester.tap(find.text(title));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(AppBar, title), findsOneWidget);
-      await tester.pageBack();
+      expect(find.byType(BackButton), findsNothing);
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.text('WelkUI Flutter'), findsOneWidget);
     }

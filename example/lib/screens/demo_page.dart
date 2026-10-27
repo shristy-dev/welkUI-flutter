@@ -13,7 +13,9 @@ class DemoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: PreviewMode.of(context) ? null : AppBar(title: Text(title)),
+    appBar: PreviewMode.of(context)
+        ? null
+        : AppBar(title: Text(title), automaticallyImplyLeading: false),
     body: SafeArea(
       child: ListView(
         padding: EdgeInsets.fromLTRB(
