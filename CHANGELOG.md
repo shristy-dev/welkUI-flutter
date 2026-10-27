@@ -1,3 +1,7 @@
+## 0.1.7
+* Add a global `WelkThemeData.textScaleFactor` preference and customizable text
+  scaling across all widgets, with `overRideTextScaleFactor` local overrides.
+
 ## 0.1.6
 
 * Select dedicated black and white avatar assets for light and dark modes
