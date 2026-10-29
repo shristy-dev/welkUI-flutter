@@ -69,6 +69,54 @@ Short Stack is bundled locally; no additional font setup is needed.
 | `WelkOTPInput` | `WelkMenu` | `WelkDatePicker` |
 | `WelkDropDown` | `WelkSticker` | `WelkTimePicker` |
 | `WelkRangeSlider` | `WelkStickerCard` | `WelkTabs` |
+| | `WelkBottomNavBar` | `WelkBottomNavScaffold` |
+
+## Bottom navigation
+
+`WelkBottomNavScaffold` is a complete app shell for 2–5 destinations. Each
+destination gets its own stateful page and nested `Navigator`, so page state is
+kept while switching tabs, and `Navigator.of(context).push(...)` opens a subpage
+inside the current destination.
+
+```dart
+WelkBottomNavScaffold(
+  layout: WelkBottomNavLayout.popCircle, // blockCenter, popBlock, comicDock, bubbleRail
+  mode: WelkBottomNavMode.floating, // or defaultMode (anchored)
+  visibility: WelkBottomNavVisibility.hideOnScrollDown, // sticky, alwaysVisible
+  hideOnSubpages: true,
+  transition: WelkBottomNavTransition.fadeThrough,
+  initialIndex: 0,
+  onIndexChanged: (index) {},
+  style: const WelkBottomNavStyle(height: 64, activeItemSize: 60),
+  items: [
+    WelkBottomNavItem(
+      icon: const Icon(Icons.home_outlined),
+      activeIcon: const Icon(Icons.home),
+      label: 'Home',
+      builder: (_) => const HomePage(),
+    ),
+    // ...up to five items
+  ],
+)
+```
+
+- **Layouts:** `popCircle`, `blockCenter`, and `popBlock` feature the middle
+  destination (with 3 or 5 items); `comicDock` raises a comic tile for the
+  active item; `bubbleRail` glides a bubble between items.
+- **Visibility:** `sticky` stays visible while scrolling, `hideOnScrollDown`
+  hides when scrolling down (tune with `scrollSensitivity`), and
+  `alwaysVisible` never hides. `hideOnSubpages` (default `true`) hides the bar
+  on pushed subpages and restores it on the destination's root page.
+- **State:** use `WelkBottomNavScaffold.of(context)` to `select(index)` or
+  `popToRoot()`. Tapping the active item again pops it to its root page.
+- **Styling:** `WelkBottomNavStyle` covers colors, icons, typography, label
+  behavior, height, width, margins, padding, corner radius, borders, shadows,
+  elevation, active-item size, and animation duration and curve. Unset colors
+  follow the WelkUI light and dark palettes.
+
+Use the stateless `WelkBottomNavBar` (with `currentIndex` and `onTap`) to manage
+pages yourself, for example as a `Scaffold.bottomNavigationBar` with
+`extendBody: true`.
 
 ## Global dark mode
 
