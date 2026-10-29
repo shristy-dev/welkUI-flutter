@@ -3,6 +3,7 @@ export 'src/widgets/welk_accordion.dart';
 export 'src/widgets/welk_attachment.dart';
 export 'src/widgets/welk_avatar.dart';
 export 'src/widgets/welk_badge.dart';
+export 'src/widgets/welk_bottom_nav_bar.dart';
 export 'src/widgets/welk_bread_crumbs.dart';
 export 'src/widgets/welk_button.dart';
 export 'src/widgets/welk_card.dart';

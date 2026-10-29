@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'screens/bottom_nav_screen.dart';
 import 'screens/button_screen.dart';
 import 'screens/card_screen.dart';
 import 'screens/display_widgets_screen.dart';
@@ -22,6 +23,7 @@ const widgetCatalog = <({String name, String route, Widget screen})>[
   (name: 'WelkAttachment', route: '/attachment', screen: AttachmentScreen()),
   (name: 'WelkAvatar', route: '/avatar', screen: AvatarScreen()),
   (name: 'WelkBadge', route: '/badge', screen: BadgeScreen()),
+  (name: 'WelkBottomNavBar', route: '/bottom-nav', screen: BottomNavScreen()),
   (name: 'WelkBreadCrumbs', route: '/breadcrumbs', screen: BreadCrumbsScreen()),
   (name: 'WelkCheckBox', route: '/checkbox', screen: CheckBoxScreen()),
   (name: 'WelkDateInput', route: '/date-input', screen: DateInputScreen()),
