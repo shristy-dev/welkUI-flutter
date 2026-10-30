@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'screens/bottom_nav_screen.dart';
+import 'screens/app_bar_screen.dart';
 import 'screens/button_screen.dart';
 import 'screens/card_screen.dart';
 import 'screens/display_widgets_screen.dart';
@@ -14,6 +15,7 @@ import 'screens/switch_screen.dart';
 
 /// The single source for home navigation and documentation preview routes.
 const widgetCatalog = <({String name, String route, Widget screen})>[
+  (name: 'WelkAppBar', route: '/app-bar', screen: AppBarScreen()),
   (name: 'WelkButton', route: '/button', screen: ButtonScreen()),
   (name: 'WelkSwitch', route: '/switch', screen: SwitchScreen()),
   (name: 'WelkCard', route: '/card', screen: CardScreen()),

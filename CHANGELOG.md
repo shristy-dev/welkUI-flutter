@@ -1,3 +1,11 @@
+## 0.2.0
+
+* Add `WelkAppBar` with ComicStrip, Sticker, Bubble, and Split layouts,
+  floating card appearance, string/custom titles, logo positioning, up to three
+  actions, and theme-aware styling.
+* Add `WelkSliverAppBar` for pinned or scroll-away behavior and an interactive
+  app bar example with a launchable scrolling demo.
+
 ## 0.1.9
 
 * Add `WelkBottomNavBar` and `WelkBottomNavScaffold` with five comic layouts

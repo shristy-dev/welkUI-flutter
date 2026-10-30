@@ -70,6 +70,66 @@ Short Stack is bundled locally; no additional font setup is needed.
 | `WelkDropDown` | `WelkSticker` | `WelkTimePicker` |
 | `WelkRangeSlider` | `WelkStickerCard` | `WelkTabs` |
 | | `WelkBottomNavBar` | `WelkBottomNavScaffold` |
+| | `WelkAppBar` | `WelkSliverAppBar` |
+
+## App bars
+
+`WelkAppBar` works in `Scaffold.appBar` and provides four layouts:
+`comicStrip` (accent underline), `sticker` (tilted title sticker), `bubble`
+(pill title), and `split` (contrasting leading panel).
+
+```dart
+Scaffold(
+  appBar: WelkAppBar(
+    title: 'Comic studio', // Or titleWidget: MyCustomTitle()
+    logo: const Icon(Icons.bolt),
+    logoPosition: WelkAppBarLogoPosition.left, // Or center
+    layout: WelkAppBarLayout.sticker,
+    floating: true,
+    actions: [
+      IconButton(
+        tooltip: 'Search',
+        icon: const Icon(Icons.search),
+        onPressed: () {},
+      ),
+    ],
+  ),
+  body: const MyPage(),
+)
+```
+
+Provide either a string `title` or a custom `titleWidget`, and up to three
+actions. Logo placement follows the leading edge or centers the logo/title
+group; on narrow screens branding yields space to the action buttons.
+Back and drawer buttons are inferred automatically, or supply `leading`.
+
+`floating: true` draws a detached card with margins and a hard comic shadow;
+it does not enable scroll-floating behavior. Customize `height`, `margin`,
+`padding`, `logoSize`, `titleStyle`, `borderRadius`, `borderWidth`,
+`backgroundColor`, `foregroundColor`, `accentColor`, `borderColor`,
+`shadowColor`, and `shadowOffset`. Unset colors follow `WelkTheme`; use
+`overRideDarkMode` for a local override. Set `primary: false` for inline
+previews to avoid status-bar padding.
+
+For sticky or scroll-away behavior, use the sliver wrapper:
+
+```dart
+CustomScrollView(
+  slivers: [
+    WelkSliverAppBar(
+      pinned: true, // false scrolls the bar away with the page
+      appBar: WelkAppBar(title: 'Adventure', floating: true),
+    ),
+    SliverList.builder(
+      itemCount: 40,
+      itemBuilder: (_, index) => ListTile(title: Text('Panel $index')),
+    ),
+  ],
+)
+```
+
+The example's **WelkAppBar** screen (`/app-bar`) includes every layout,
+floating and attached previews, custom branding, and a launchable scrolling demo.
 
 ## Bottom navigation
 

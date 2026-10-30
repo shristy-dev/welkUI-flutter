@@ -1,5 +1,6 @@
 export 'src/theme/welk_theme.dart';
 export 'src/widgets/welk_accordion.dart';
+export 'src/widgets/welk_app_bar.dart';
 export 'src/widgets/welk_attachment.dart';
 export 'src/widgets/welk_avatar.dart';
 export 'src/widgets/welk_badge.dart';
