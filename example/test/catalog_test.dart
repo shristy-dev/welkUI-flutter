@@ -5,10 +5,10 @@ import 'package:welkui_flutter_example/main.dart';
 import 'package:welkui_flutter_example/widget_catalog.dart';
 
 void main() {
-  test('all 30 reference components have unique names and preview routes', () {
-    expect(widgetCatalog, hasLength(30));
-    expect(widgetCatalog.map((item) => item.name).toSet(), hasLength(30));
-    expect(widgetCatalog.map((item) => item.route).toSet(), hasLength(30));
+  test('all 32 reference components have unique names and preview routes', () {
+    expect(widgetCatalog, hasLength(32));
+    expect(widgetCatalog.map((item) => item.name).toSet(), hasLength(32));
+    expect(widgetCatalog.map((item) => item.route).toSet(), hasLength(32));
   });
 
   for (final item in widgetCatalog) {

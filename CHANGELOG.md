@@ -1,3 +1,21 @@
+## 0.2.0
+
+* Add `WelkAppBar` with ComicStrip, Sticker, Bubble, and Split layouts,
+  floating card appearance, string/custom titles, logo positioning, up to three
+  actions, and theme-aware styling.
+* Add `WelkSliverAppBar` for pinned or scroll-away behavior and an interactive
+  app bar example with a launchable scrolling demo.
+
+## 0.1.9
+
+* Add `WelkBottomNavBar` and `WelkBottomNavScaffold` with five comic layouts
+  (PopCircle, BlockCenter, PopBlock, ComicDock, BubbleRail), default and
+  floating modes, per-destination stateful pages with nested navigators, and
+  sticky, hide-on-scroll-down, always-visible, and hide-on-subpages behaviors.
+* Add `WelkBottomNavStyle` for colors, typography, sizing, borders, shadows,
+  elevation, and animations, with light and dark theme support.
+* Add a bottom navigation preview and launchable demo app to the example.
+
 ## 0.1.8
 
 * Include bundled avatar icons in the published package, fixing missing-asset
